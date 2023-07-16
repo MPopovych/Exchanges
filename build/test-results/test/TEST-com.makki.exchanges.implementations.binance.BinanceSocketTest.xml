@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.makki.exchanges.implementations.binance.BinanceSocketTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2023-07-16T21:30:25" hostname="Maxs-MBP" time="24.02">
+  <properties/>
+  <testcase name="testSelfManagingRunAndExternalClose()" classname="com.makki.exchanges.implementations.binance.BinanceSocketTest" time="18.014"/>
+  <testcase name="testSelfManagingInnerClose()" classname="com.makki.exchanges.implementations.binance.BinanceSocketTest" time="6.006"/>
+  <system-out><![CDATA[[TestSocketBinance] -> has started
+Received msg: Hello, world
+Received msg: Hello, world
+received msg:
+{"result":null,"id":1}
+Received msg: Hello, world
+Received msg: Hello, world
+received msg:
+{"e":"kline","E":1689543029306,"s":"BTCUSDT","k":{"t":1689543000000,"T":1689543899999,"s":"BTCUSDT","i":"15m","f":3173141159,"L":3173141621,"o":"30308.08000000","c":"30298.83000000","h":"30308.08000000","l":"30298.83000000","v":"10.73666000","n":463,"x":false,"q":"325375.05772150","V":"2.69521000","Q":"81676.70409690","B":"0"}}
+Received msg: Hello, world
+Received msg: Hello, world
+received msg:
+{"e":"kline","E":1689543031331,"s":"BTCUSDT","k":{"t":1689543000000,"T":1689543899999,"s":"BTCUSDT","i":"15m","f":3173141159,"L":3173141639,"o":"30308.08000000","c":"30298.35000000","h":"30308.08000000","l":"30298.34000000","v":"11.09995000","n":481,"x":false,"q":"336382.15723120","V":"2.75831000","Q":"83588.53399500","B":"0"}}
+Received msg: Hello, world
+Received msg: Hello, world
+Received msg: Hello, world
+received msg:
+{"e":"kline","E":1689543033957,"s":"BTCUSDT","k":{"t":1689543000000,"T":1689543899999,"s":"BTCUSDT","i":"15m","f":3173141159,"L":3173141642,"o":"30308.08000000","c":"30298.34000000","h":"30308.08000000","l":"30298.34000000","v":"11.12063000","n":484,"x":false,"q":"337008.72702130","V":"2.77020000","Q":"83948.78137650","B":"0"}}
+Received msg: Hello, world
+[TestSocketBinance] -> received an error: kotlinx.coroutines.JobCancellationException: Job was cancelled; job=JobImpl{Cancelled}@3d155254
+[TestSocketBinance] -> has stopped, wont restart
+Received msg: Hello, world
+Received msg: Hello, world
+Received msg: Hello, world
+Received msg: Hello, world
+Received msg: Hello, world
+Received msg: Hello, world
+Received msg: Hello, world
+Received msg: Hello, world
+[TestSocketBinance] -> has started
+Received msg: Hello, world
+Received msg: Hello, world
+received msg:
+{"result":null,"id":1}
+[TestSocketBinance] -> has stopped, wont restart
+Received msg: Hello, world
+Received msg: Hello, world
+Received msg: Hello, world
+Received msg: Hello, world
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

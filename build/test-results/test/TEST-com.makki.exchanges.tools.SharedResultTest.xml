@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.makki.exchanges.tools.SharedResultTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2023-07-16T21:30:49" hostname="Maxs-MBP" time="7.15">
+  <properties/>
+  <testcase name="testConcurrentLoadAny()" classname="com.makki.exchanges.tools.SharedResultTest" time="3.576"/>
+  <testcase name="testConcurrent()" classname="com.makki.exchanges.tools.SharedResultTest" time="3.574"/>
+  <system-out><![CDATA[Received msg: Hello, world
+Launched action: 0
+Received msg: Hello, world
+Launched action: 10
+Received msg: Hello, world
+Received msg: Hello, world
+[RESULT 10, RESULT 0]
+Received msg: Hello, world
+Launched action: 0
+Received msg: Hello, world
+Launched action: 10
+Received msg: Hello, world
+[RESULT 10, RESULT 0]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

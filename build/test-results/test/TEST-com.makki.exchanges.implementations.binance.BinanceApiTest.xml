@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.makki.exchanges.implementations.binance.BinanceApiTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2023-07-16T21:30:24" hostname="Maxs-MBP" time="0.744">
+  <properties/>
+  <testcase name="testBinanceParseErrorLayer()" classname="com.makki.exchanges.implementations.binance.BinanceApiTest" time="0.018"/>
+  <testcase name="testBinanceRealRequest()" classname="com.makki.exchanges.implementations.binance.BinanceApiTest" time="0.718"/>
+  <testcase name="testBinanceOkLayer()" classname="com.makki.exchanges.implementations.binance.BinanceApiTest" time="0.001"/>
+  <testcase name="testBinanceConnectionErrorLayer()" classname="com.makki.exchanges.implementations.binance.BinanceApiTest" time="0.001"/>
+  <testcase name="testBinanceHttpErrorLayer()" classname="com.makki.exchanges.implementations.binance.BinanceApiTest" time="0.001"/>
+  <testcase name="testBinanceRestErrorLayer()" classname="com.makki.exchanges.implementations.binance.BinanceApiTest" time="0.004"/>
+  <system-out><![CDATA[Received msg: Hello, world
+[BinanceKline(start=1689534900000, end=1689535799999, open=30291.98, high=30297.35, low=30240.5, close=30266.02), BinanceKline(start=1689535800000, end=1689536699999, open=30266.03, high=30267.67, low=30200.43, close=30235.43), BinanceKline(start=1689536700000, end=1689537599999, open=30235.42, high=30261.03, low=30228.0, close=30252.93), BinanceKline(start=1689537600000, end=1689538499999, open=30252.94, high=30288.99, low=30236.0, close=30284.84), BinanceKline(start=1689538500000, end=1689539399999, open=30284.83, high=30295.93, low=30242.51, close=30263.54), BinanceKline(start=1689539400000, end=1689540299999, open=30263.54, high=30296.84, low=30263.54, close=30293.91), BinanceKline(start=1689540300000, end=1689541199999, open=30293.9, high=30293.91, low=30271.64, close=30271.64), BinanceKline(start=1689541200000, end=1689542099999, open=30271.64, high=30284.42, low=30271.64, close=30284.41), BinanceKline(start=1689542100000, end=1689542999999, open=30284.42, high=30314.48, low=30284.41, close=30308.07), BinanceKline(start=1689543000000, end=1689543899999, open=30308.08, high=30308.08, low=30298.83, close=30298.84)]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
