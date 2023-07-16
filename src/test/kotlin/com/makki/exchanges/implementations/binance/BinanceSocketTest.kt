@@ -2,7 +2,10 @@ package com.makki.exchanges.implementations.binance
 
 import com.makki.exchanges.asyncTest
 import com.makki.exchanges.implementations.SelfManagingSocket
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlin.coroutines.coroutineContext
 import kotlin.test.Test
 
 class BinanceSocketTest {
@@ -17,13 +20,33 @@ class BinanceSocketTest {
 }
 """.trimIndent()
 
+	@Test
+	fun testBinanceSocket() = asyncTest {
+		val socket = BinanceKlineSocket("15m")
+		socket.addMarket("btcusdt")
+		socket.start()
+
+		var job: Job? = null
+		with(CoroutineScope(coroutineContext)) {
+			job = launch {
+				socket.observe().collect {
+					println(it)
+				}
+			}
+		}
+
+		delay(5000)
+		socket.stop()
+		delay(1000)
+		job?.cancel()
+	}
 
 	@Test
 	fun testSelfManagingRunAndExternalClose() = asyncTest {
 
 		val buffer = ArrayList<String>()
 
-		val socket = SelfManagingSocket.builder<Unit>("TestSocketBinance")
+		val socket = SelfManagingSocket.builder("TestSocketBinance")
 			.url("wss://stream.binance.com:9443/ws/stream")
 			.onConnectionOpen { this.send(subMsg) }
 			.onTextMsg {
@@ -45,7 +68,7 @@ class BinanceSocketTest {
 	fun testSelfManagingInnerClose() = asyncTest {
 		val buffer = ArrayList<String>()
 
-		val socket = SelfManagingSocket.builder<Unit>("TestSocketBinance")
+		val socket = SelfManagingSocket.builder("TestSocketBinance")
 			.url("wss://stream.binance.com:9443/ws/stream")
 			.onConnectionOpen { this.send(subMsg) }
 			.onTextMsg {

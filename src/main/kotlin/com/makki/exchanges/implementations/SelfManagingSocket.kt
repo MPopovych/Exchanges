@@ -1,7 +1,7 @@
 package com.makki.exchanges.implementations
 
+import com.makki.exchanges.tools.CachedSubject
 import com.makki.exchanges.tools.RetryTimer
-import com.makki.exchanges.tools.StateSubject
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import java.lang.ref.WeakReference
@@ -9,84 +9,83 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 
-class SocketBuilder<T>(private val name: String) {
+class SocketBuilder(private val name: String) {
 	private var urlProducer: (() -> String)? = null
 	private var basicSocket: BasicSocket? = null
 	private var onConnectionOpen: (suspend SocketControl.() -> Unit)? = null
 	private var onConnectionClosed: (suspend SocketControl.() -> Unit)? = null
-	private var onSocketStop: (suspend (SelfManagingSocket<T>) -> Unit)? = null
-	private var binaryBlock: (suspend SocketControl.(ByteArray) -> T)? = null
-	private var textBlock: (suspend SocketControl.(String) -> T)? = null
+	private var onSocketStop: (suspend (SelfManagingSocket) -> Unit)? = null
+	private var binaryBlock: (suspend SocketControl.(ByteArray) -> Unit)? = null
+	private var textBlock: (suspend SocketControl.(String) -> Unit)? = null
 
-	fun url(url: String): SocketBuilder<T> {
+	fun url(url: String): SocketBuilder {
 		urlProducer = { url }
 		return this
 	}
 
-	fun url(url: () -> String): SocketBuilder<T> {
+	fun url(url: () -> String): SocketBuilder {
 		urlProducer = url
 		return this
 	}
 
-	fun socket(socket: BasicSocket): SocketBuilder<T> {
+	fun socket(socket: BasicSocket): SocketBuilder {
 		basicSocket = socket
 		return this
 	}
 
-	fun onConnectionOpen(onOpen: (suspend SocketControl.() -> Unit)): SocketBuilder<T> {
+	fun onConnectionOpen(onOpen: (suspend SocketControl.() -> Unit)): SocketBuilder {
 		onConnectionOpen = onOpen
 		return this
 	}
 
-	fun onConnectionClosed(onClose: (suspend SocketControl.() -> Unit)): SocketBuilder<T> {
+	fun onConnectionClosed(onClose: (suspend SocketControl.() -> Unit)): SocketBuilder {
 		onConnectionClosed = onClose
 		return this
 	}
 
-	fun onSocketStop(onStop: (suspend (SelfManagingSocket<T>) -> Unit)): SocketBuilder<T> {
+	fun onSocketStop(onStop: (suspend (SelfManagingSocket) -> Unit)): SocketBuilder {
 		onSocketStop = onStop
 		return this
 	}
 
-	fun onBinaryMsg(block: (suspend SocketControl.(ByteArray) -> T)): SocketBuilder<T> {
+	fun onBinaryMsg(block: (suspend SocketControl.(ByteArray) -> Unit)): SocketBuilder {
 		binaryBlock = block
 		return this
 	}
 
-	fun onTextMsg(block: (suspend SocketControl.(String) -> T)): SocketBuilder<T> {
+	fun onTextMsg(block: (suspend SocketControl.(String) -> Unit)): SocketBuilder {
 		textBlock = block
 		return this
 	}
 
-	fun build(): SelfManagingSocket<T> {
+	fun build(): SelfManagingSocket {
 		require(textBlock != null)
 		require(urlProducer != null)
 		val url = urlProducer ?: throw IllegalArgumentException("Url is missing")
 		val block = textBlock ?: throw IllegalArgumentException("Msg handle is missing")
 		val socket = basicSocket ?: BasicSocket()
 
-		return SelfManagingSocket<T>(
+		return SelfManagingSocket(
 			name, socket, url, onConnectionOpen, onConnectionClosed, onSocketStop, binaryBlock, block
 		)
 	}
 }
 
-class SelfManagingSocket<T>(
+class SelfManagingSocket(
 	private val name: String,
 	private val socket: BasicSocket,
 	private val urlProducer: () -> String,
 	private val onConnectionOpen: (suspend SocketControl.() -> Unit)? = null,
 	private val onConnectionClosed: (suspend SocketControl.() -> Unit)? = null,
-	private val onSocketStop: (suspend (SelfManagingSocket<T>) -> Unit)? = null,
-	private val binaryBlock: (suspend SocketControl.(ByteArray) -> T)? = null,
-	private val block: suspend SocketControl.(String) -> T,
+	private val onSocketStop: (suspend (SelfManagingSocket) -> Unit)? = null,
+	private val binaryBlock: (suspend SocketControl.(ByteArray) -> Unit)? = null,
+	private val block: suspend SocketControl.(String) -> Unit,
 ) : SocketControl {
 
 	private val activated = AtomicBoolean(false)
 	private val retryTimer = RetryTimer(delay = TimeUnit.SECONDS.toMillis(2))
 
 	// drop the oldest entry in cache
-	private val subject = StateSubject<T>(overflow = BufferOverflow.DROP_OLDEST)
 	private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
 	private var connectionJob: Job? = null
@@ -120,12 +119,14 @@ class SelfManagingSocket<T>(
 		}
 	}
 
-	override suspend fun send(msg: ByteArray) {
-		session?.get()?.send(msg)
+	override suspend fun send(msg: ByteArray): Boolean {
+		session?.get()?.send(msg) ?: return false
+		return true
 	}
 
-	override suspend fun send(msg: String) {
-		session?.get()?.send(msg)
+	override suspend fun send(msg: String): Boolean {
+		session?.get()?.send(msg) ?: return false
+		return true
 	}
 
 	private fun internalStart() {
@@ -167,7 +168,6 @@ class SelfManagingSocket<T>(
 				is SocketFrame.Close -> break
 				else -> continue
 			}
-			subject.emit(result)
 		}
 	}
 
@@ -176,7 +176,7 @@ class SelfManagingSocket<T>(
 	}
 
 	companion object {
-		fun <T> builder(name: String) = SocketBuilder<T>(name)
+		fun builder(name: String) = SocketBuilder(name)
 	}
 
 }
@@ -184,7 +184,7 @@ class SelfManagingSocket<T>(
 interface SocketControl {
 	fun close()
 	fun closeAndMaybeReconnect()
-	suspend fun send(msg: String)
-	suspend fun send(msg: ByteArray)
+	suspend fun send(msg: String): Boolean
+	suspend fun send(msg: ByteArray): Boolean
 }
 

@@ -23,7 +23,7 @@
 <tr>
 <td>
 <div class="infoBox" id="tests">
-<div class="counter">2</div>
+<div class="counter">1</div>
 <p>tests</p>
 </div>
 </td>
@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">24.020s</div>
+<div class="counter">6.095s</div>
 <p>duration</p>
 </div>
 </td>
@@ -66,6 +66,9 @@
 <li>
 <a href="#tab1">Standard output</a>
 </li>
+<li>
+<a href="#tab2">Standard error</a>
+</li>
 </ul>
 <div id="tab0" class="tab">
 <h2>Tests</h2>
@@ -78,13 +81,8 @@
 </tr>
 </thead>
 <tr>
-<td class="success">testSelfManagingInnerClose()</td>
-<td class="success">6.006s</td>
-<td class="success">passed</td>
-</tr>
-<tr>
-<td class="success">testSelfManagingRunAndExternalClose()</td>
-<td class="success">18.014s</td>
+<td class="success">testBinanceSocket()</td>
+<td class="success">6.095s</td>
 <td class="success">passed</td>
 </tr>
 </table>
@@ -92,45 +90,19 @@
 <div id="tab1" class="tab">
 <h2>Standard output</h2>
 <span class="code">
-<pre>[TestSocketBinance] -&gt; has started
-Received msg: Hello, world
-Received msg: Hello, world
-received msg:
-{&quot;result&quot;:null,&quot;id&quot;:1}
-Received msg: Hello, world
-Received msg: Hello, world
-received msg:
-{&quot;e&quot;:&quot;kline&quot;,&quot;E&quot;:1689543029306,&quot;s&quot;:&quot;BTCUSDT&quot;,&quot;k&quot;:{&quot;t&quot;:1689543000000,&quot;T&quot;:1689543899999,&quot;s&quot;:&quot;BTCUSDT&quot;,&quot;i&quot;:&quot;15m&quot;,&quot;f&quot;:3173141159,&quot;L&quot;:3173141621,&quot;o&quot;:&quot;30308.08000000&quot;,&quot;c&quot;:&quot;30298.83000000&quot;,&quot;h&quot;:&quot;30308.08000000&quot;,&quot;l&quot;:&quot;30298.83000000&quot;,&quot;v&quot;:&quot;10.73666000&quot;,&quot;n&quot;:463,&quot;x&quot;:false,&quot;q&quot;:&quot;325375.05772150&quot;,&quot;V&quot;:&quot;2.69521000&quot;,&quot;Q&quot;:&quot;81676.70409690&quot;,&quot;B&quot;:&quot;0&quot;}}
-Received msg: Hello, world
-Received msg: Hello, world
-received msg:
-{&quot;e&quot;:&quot;kline&quot;,&quot;E&quot;:1689543031331,&quot;s&quot;:&quot;BTCUSDT&quot;,&quot;k&quot;:{&quot;t&quot;:1689543000000,&quot;T&quot;:1689543899999,&quot;s&quot;:&quot;BTCUSDT&quot;,&quot;i&quot;:&quot;15m&quot;,&quot;f&quot;:3173141159,&quot;L&quot;:3173141639,&quot;o&quot;:&quot;30308.08000000&quot;,&quot;c&quot;:&quot;30298.35000000&quot;,&quot;h&quot;:&quot;30308.08000000&quot;,&quot;l&quot;:&quot;30298.34000000&quot;,&quot;v&quot;:&quot;11.09995000&quot;,&quot;n&quot;:481,&quot;x&quot;:false,&quot;q&quot;:&quot;336382.15723120&quot;,&quot;V&quot;:&quot;2.75831000&quot;,&quot;Q&quot;:&quot;83588.53399500&quot;,&quot;B&quot;:&quot;0&quot;}}
-Received msg: Hello, world
-Received msg: Hello, world
-Received msg: Hello, world
-received msg:
-{&quot;e&quot;:&quot;kline&quot;,&quot;E&quot;:1689543033957,&quot;s&quot;:&quot;BTCUSDT&quot;,&quot;k&quot;:{&quot;t&quot;:1689543000000,&quot;T&quot;:1689543899999,&quot;s&quot;:&quot;BTCUSDT&quot;,&quot;i&quot;:&quot;15m&quot;,&quot;f&quot;:3173141159,&quot;L&quot;:3173141642,&quot;o&quot;:&quot;30308.08000000&quot;,&quot;c&quot;:&quot;30298.34000000&quot;,&quot;h&quot;:&quot;30308.08000000&quot;,&quot;l&quot;:&quot;30298.34000000&quot;,&quot;v&quot;:&quot;11.12063000&quot;,&quot;n&quot;:484,&quot;x&quot;:false,&quot;q&quot;:&quot;337008.72702130&quot;,&quot;V&quot;:&quot;2.77020000&quot;,&quot;Q&quot;:&quot;83948.78137650&quot;,&quot;B&quot;:&quot;0&quot;}}
-Received msg: Hello, world
-[TestSocketBinance] -&gt; received an error: kotlinx.coroutines.JobCancellationException: Job was cancelled; job=JobImpl{Cancelled}@3d155254
-[TestSocketBinance] -&gt; has stopped, wont restart
-Received msg: Hello, world
-Received msg: Hello, world
-Received msg: Hello, world
-Received msg: Hello, world
-Received msg: Hello, world
-Received msg: Hello, world
-Received msg: Hello, world
-Received msg: Hello, world
-[TestSocketBinance] -&gt; has started
-Received msg: Hello, world
-Received msg: Hello, world
-received msg:
-{&quot;result&quot;:null,&quot;id&quot;:1}
-[TestSocketBinance] -&gt; has stopped, wont restart
-Received msg: Hello, world
-Received msg: Hello, world
-Received msg: Hello, world
-Received msg: Hello, world
+<pre>[BinanceKlineSocket] -&gt; has started
+BinanceSocketKlineAsset(start=1689545700000, end=1689546599999, open=30345.0, close=30332.0, high=30361.0, low=30331.99, volume=78.61212, trades=2803)
+[BinanceKlineSocket] -&gt; received an error: kotlinx.coroutines.JobCancellationException: Job was cancelled; job=JobImpl{Cancelled}@e6f149f
+[BinanceKlineSocket] -&gt; has stopped, wont restart
+</pre>
+</span>
+</div>
+<div id="tab2" class="tab">
+<h2>Standard error</h2>
+<span class="code">
+<pre>SLF4J: Failed to load class &quot;org.slf4j.impl.StaticLoggerBinder&quot;.
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
 </pre>
 </span>
 </div>
@@ -142,7 +114,7 @@ Received msg: Hello, world
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 8.1.1</a> at Jul 16, 2023, 11:30:56 PM</p>
+<a href="http://www.gradle.org">Gradle 8.1.1</a> at Jul 17, 2023, 12:24:52 AM</p>
 </div>
 </div>
 </body>

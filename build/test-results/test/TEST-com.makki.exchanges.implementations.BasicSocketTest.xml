@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.makki.exchanges.implementations.BasicSocketTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2023-07-16T21:30:22" hostname="Maxs-MBP" time="2.011">
-  <properties/>
-  <testcase name="testMock()" classname="com.makki.exchanges.implementations.BasicSocketTest" time="2.011"/>
-  <system-out><![CDATA[[MockSocket] -> has started
-Received msg: Hello, world
-]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

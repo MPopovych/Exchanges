@@ -3,6 +3,7 @@ package com.makki.exchanges.implementations.binance
 import com.makki.exchanges.asyncTest
 import com.makki.exchanges.implementations.BasicResponse
 import com.makki.exchanges.implementations.MockClient
+import com.makki.exchanges.implementations.binance.models.BinanceKline
 import io.ktor.util.network.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

@@ -5,6 +5,9 @@ import kotlinx.serialization.json.Json
 
 interface RestApi {
 
+	val json: Json
+		get() = Json { ignoreUnknownKeys = true }
+
 	fun Map<String, Any>.toQuery(): String {
 		return this.map { "${it.key}=${it.value}" }.joinToString("&")
 	}
@@ -29,7 +32,7 @@ inline fun <reified Ok, reified Error : RestApi.ErrorValidator> RestApi.defaultP
 		return RestResult.HttpError(ok.httpCode)
 	}
 	try {
-		val error: Error = Json.decodeFromString<Error>(ok.text)
+		val error: Error = json.decodeFromString<Error>(ok.text)
 		if (error.isNotDefault()) {
 			return RestResult.RestError(error)
 		}
@@ -37,7 +40,7 @@ inline fun <reified Ok, reified Error : RestApi.ErrorValidator> RestApi.defaultP
 	}
 
 	return try {
-		val decode: Ok = Json.decodeFromString<Ok>(ok.text)
+		val decode: Ok = json.decodeFromString<Ok>(ok.text)
 		RestResult.Ok(decode)
 	} catch (e: Exception) {
 		RestResult.ParseError(e, ok.text)

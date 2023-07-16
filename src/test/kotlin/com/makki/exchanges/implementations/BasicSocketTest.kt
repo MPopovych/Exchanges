@@ -10,7 +10,7 @@ class BasicSocketTest {
 	fun testMock() = asyncTest {
 		val validationMsg = "Hello, world"
 		val buffer = HashSet<String>()
-		val socket = SelfManagingSocket.builder<Unit>("MockSocket")
+		val socket = SelfManagingSocket.builder("MockSocket")
 			.url("wss://www.nonexistingwebpage.com:4443/stream")
 			.socket(MockSocket {
 				"Hello, world"

@@ -4,6 +4,7 @@ import com.makki.exchanges.abtractions.RestApi
 import com.makki.exchanges.abtractions.RestResult
 import com.makki.exchanges.abtractions.defaultParse
 import com.makki.exchanges.implementations.BasicClient
+import com.makki.exchanges.implementations.binance.models.BinanceKline
 import kotlinx.serialization.Serializable
 
 class BinanceApi(private val httpClient: BasicClient) : RestApi {
@@ -22,11 +23,7 @@ class BinanceApi(private val httpClient: BasicClient) : RestApi {
 		endTime: Long,
 	): RestResult<List<BinanceKline>, BinanceError> {
 		val queryMap = mapOf(
-			"symbol" to market,
-			"interval" to interval,
-			"limit" to limit,
-			"startTime" to startTime,
-			"endTime" to endTime
+			"symbol" to market, "interval" to interval, "limit" to limit, "startTime" to startTime, "endTime" to endTime
 		).toQuery()
 		return publicApiGetMethod<List<BinanceKline>>("api/v3/klines", queryMap)
 	}
