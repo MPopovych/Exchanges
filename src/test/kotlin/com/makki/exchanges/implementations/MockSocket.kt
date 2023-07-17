@@ -16,7 +16,7 @@ class MockSocket(val handler: suspend () -> String) : BasicSocket() {
 		val job = scope.launch {
 			while (isActive) {
 				flow.emit(handler())
-				delay(1000)
+				delay(500)
 			}
 		}
 		return block.invoke(MockSession(job, flow.asSharedFlow()))

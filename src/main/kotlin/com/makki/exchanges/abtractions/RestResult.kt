@@ -19,6 +19,30 @@ sealed interface RestResult<T, E> {
 		}
 	}
 
+	fun <M : Any> mapRestError(block: (E) -> M): RestResult<T, M> {
+		return when (this) {
+			is ConnectionError -> ConnectionError(exception)
+			is HttpError -> HttpError(code)
+			is ParseError -> ParseError(exception, json)
+			is RestError -> RestError(block(error))
+			is Ok -> Ok(data)
+		}
+	}
+
+	fun mapHttpErrorToRestError(block: (HttpError<T, E>) -> E?): RestResult<T, E> {
+		return when (this) {
+			is ConnectionError -> ConnectionError(exception)
+			is HttpError -> {
+				val replacement = block(this) ?: return HttpError(code)
+				return RestError(replacement)
+			}
+
+			is ParseError -> ParseError(exception, json)
+			is RestError -> RestError(error)
+			is Ok -> Ok(data)
+		}
+	}
+
 	@Suppress("UNCHECKED_CAST")
 	fun <F : Any> unwrap(): F? {
 		return (this as? Ok<F, Any>)?.data

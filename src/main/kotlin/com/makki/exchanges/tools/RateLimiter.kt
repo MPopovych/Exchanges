@@ -2,6 +2,12 @@ package com.makki.exchanges.tools
 
 import kotlin.math.max
 
+/**
+ * An older implementation of rate limiter based on window-cycles
+ * Has two priorities
+ * Lower - should use tryAcquire
+ * Higher - should use forceAcquire
+ */
 class RateLimiter(
 	private val interval: Long,
 	private val rate: Int,

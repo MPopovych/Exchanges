@@ -1,18 +1,28 @@
 package com.makki.exchanges.implementations.binance
 
+import com.makki.exchanges.abtractions.JsonParser
 import com.makki.exchanges.asyncTest
 import com.makki.exchanges.implementations.BasicResponse
 import com.makki.exchanges.implementations.MockClient
 import com.makki.exchanges.implementations.binance.models.BinanceKline
+import com.makki.exchanges.implementations.binance.models.BinanceMarketInfo
 import io.ktor.util.network.*
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
 class BinanceApiTest {
 
 	@Test
-	fun testBinanceRealRequest() = asyncTest {
+	fun testBinanceMarketInfoRequest() = asyncTest {
+		val response = BinanceApi().marketInfo()
+		assert(response.isOk()) { response.unwrapParseError()?.exception?.stackTraceToString() ?: "" }
+
+		val klineList = response.unwrap<BinanceMarketInfo>()
+		println(klineList?.symbols?.size)
+	}
+
+	@Test
+	fun testBinanceKlineRequest() = asyncTest {
 		val response = BinanceApi().klineData("BTCUSDT", "15m", limit = 10)
 		assert(response.isOk()) { response.toString() }
 
@@ -24,7 +34,7 @@ class BinanceApiTest {
 	@Test
 	fun testBinanceRestErrorLayer() = asyncTest {
 		val error = BinanceApi.BinanceError(14, "Test error")
-		val errorJson = Json.encodeToString(error)
+		val errorJson = JsonParser.default.encodeToString(error)
 		val mock = MockClient { _ -> BasicResponse.Ok(200, errorJson, 0) }
 		val response = BinanceApi(mock).klineData("BTCUSDT", "15m")
 		assert(response.isRestError() && response.unwrapRestError<BinanceApi.BinanceError>() != null)

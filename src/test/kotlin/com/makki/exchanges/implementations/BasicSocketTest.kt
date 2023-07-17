@@ -13,7 +13,7 @@ class BasicSocketTest {
 		val socket = SelfManagingSocket.builder("MockSocket")
 			.url("wss://www.nonexistingwebpage.com:4443/stream")
 			.socket(MockSocket {
-				"Hello, world"
+				validationMsg
 			})
 			.onTextMsg {
 				println("Received msg: $it")

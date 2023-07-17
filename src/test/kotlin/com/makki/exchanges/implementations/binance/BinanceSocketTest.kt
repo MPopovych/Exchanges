@@ -2,6 +2,8 @@ package com.makki.exchanges.implementations.binance
 
 import com.makki.exchanges.asyncTest
 import com.makki.exchanges.implementations.SelfManagingSocket
+import com.makki.exchanges.implementations.binance.models.BinanceKlineInterval
+import com.makki.exchanges.logging.printLog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
@@ -22,15 +24,18 @@ class BinanceSocketTest {
 
 	@Test
 	fun testBinanceSocket() = asyncTest {
-		val socket = BinanceKlineSocket("15m")
+		val socket = BinanceKlineSocket(BinanceKlineInterval.Minutes15)
 		socket.addMarket("btcusdt")
 		socket.start()
+
+		delay(300)
+		socket.addMarket("ethusdt")
 
 		var job: Job? = null
 		with(CoroutineScope(coroutineContext)) {
 			job = launch {
 				socket.observe().collect {
-					println(it)
+					this@BinanceSocketTest.printLog(it)
 				}
 			}
 		}

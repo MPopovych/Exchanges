@@ -1,5 +1,7 @@
 package com.makki.exchanges.implementations.binance
 
+import com.makki.exchanges.abtractions.JsonParser
+import com.makki.exchanges.abtractions.KlineInterval
 import com.makki.exchanges.implementations.SelfManagingSocket
 import com.makki.exchanges.implementations.binance.models.BinanceSocketKlineAsset
 import com.makki.exchanges.implementations.binance.models.BinanceSocketKlineMsg
@@ -7,13 +9,14 @@ import com.makki.exchanges.logging.printLog
 import com.makki.exchanges.tools.CachedSubject
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.serialization.json.Json
 import java.util.concurrent.CopyOnWriteArraySet
 
 class BinanceKlineSocket(private val intervalString: String) {
 
+	constructor(interval: KlineInterval): this(interval.apiCode)
+
 	private val marketList = CopyOnWriteArraySet<String>()
-	private val json = Json { ignoreUnknownKeys = true }
+	private val json = JsonParser.default
 
 	private val socket = SelfManagingSocket.builder("BinanceKlineSocket")
 		.url("wss://stream.binance.com:9443/ws/stream")
@@ -43,6 +46,8 @@ class BinanceKlineSocket(private val intervalString: String) {
 	 * runtime adding of market
 	 */
 	suspend fun addMarket(market: String) {
+		if (market in marketList) return
+
 		marketList.add(market)
 		val subMsg = wrapStreams(marketToRequest(market))
 		socket.send(subMsg)
@@ -50,7 +55,7 @@ class BinanceKlineSocket(private val intervalString: String) {
 
 	private suspend fun parse(msg: String) {
 		val kline: BinanceSocketKlineMsg = try {
-			json.decodeFromString(msg)
+			json.decodeFromString<BinanceSocketKlineMsg>(msg)
 		} catch (e: Exception) {
 			if (msg.contains("code") || msg.contains("msg")) {
 				printLog("Error in socket, response: $msg")

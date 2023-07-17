@@ -5,14 +5,18 @@ import com.makki.exchanges.abtractions.RestResult
 import com.makki.exchanges.abtractions.defaultParse
 import com.makki.exchanges.implementations.BasicClient
 import com.makki.exchanges.implementations.binance.models.BinanceKline
+import com.makki.exchanges.implementations.binance.models.BinanceMarketInfo
+import com.makki.exchanges.implementations.binance.models.BinanceMarketPair
 import kotlinx.serialization.Serializable
 
-class BinanceApi(private val httpClient: BasicClient) : RestApi {
-
-	constructor() : this(BasicClient.builder().build())
+class BinanceApi(private val httpClient: BasicClient = BasicClient.builder().build()) : RestApi {
 
 	companion object {
 		const val BASE_URL = "https://api.binance.com"
+	}
+
+	suspend fun marketInfo(): RestResult<BinanceMarketInfo, BinanceError> {
+		return publicApiGetMethod<BinanceMarketInfo>("api/v3/exchangeInfo", "")
 	}
 
 	suspend fun klineData(
@@ -40,7 +44,7 @@ class BinanceApi(private val httpClient: BasicClient) : RestApi {
 		return publicApiGetMethod<List<BinanceKline>>("api/v3/klines", queryMap)
 	}
 
-	private suspend inline fun <reified T> publicApiGetMethod(
+	private suspend inline fun <reified T : Any> publicApiGetMethod(
 		path: String,
 		query: String,
 	): RestResult<T, BinanceError> {

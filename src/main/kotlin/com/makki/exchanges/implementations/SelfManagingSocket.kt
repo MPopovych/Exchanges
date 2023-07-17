@@ -1,5 +1,7 @@
 package com.makki.exchanges.implementations
 
+import com.makki.exchanges.logging.printLog
+import com.makki.exchanges.logging.printLogRed
 import com.makki.exchanges.tools.CachedSubject
 import com.makki.exchanges.tools.RetryTimer
 import kotlinx.coroutines.*
@@ -146,7 +148,7 @@ class SelfManagingSocket(
 				try {
 					def.await()
 				} catch (e: Exception) {
-					logMsg("received an error: $e")
+					logError("received an error: $e")
 				}
 				val nextDelay = retryTimer.getNextRetryDelay()
 				if (activated()) {
@@ -172,7 +174,11 @@ class SelfManagingSocket(
 	}
 
 	private fun logMsg(msg: String) {
-		println("[${name}] -> $msg")
+		printLog(msg)
+	}
+
+	private fun logError(msg: String) {
+		printLogRed(msg)
 	}
 
 	companion object {

@@ -6,7 +6,7 @@ import kotlinx.serialization.json.Json
 interface RestApi {
 
 	val json: Json
-		get() = Json { ignoreUnknownKeys = true }
+		get() = JsonParser.default
 
 	fun Map<String, Any>.toQuery(): String {
 		return this.map { "${it.key}=${it.value}" }.joinToString("&")
@@ -22,7 +22,7 @@ interface RestApi {
 
 }
 
-inline fun <reified Ok, reified Error : RestApi.ErrorValidator> RestApi.defaultParse(response: BasicResponse): RestResult<Ok, Error> {
+inline fun <reified Ok : Any, reified Error : RestApi.ErrorValidator> RestApi.defaultParse(response: BasicResponse): RestResult<Ok, Error> {
 	val ok = when (response) {
 		is BasicResponse.Error -> return RestResult.ConnectionError(response.e)
 		is BasicResponse.Ok -> response

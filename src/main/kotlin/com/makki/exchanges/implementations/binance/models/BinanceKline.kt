@@ -12,6 +12,8 @@ data class BinanceKline(
 	val high: Double,
 	val low: Double,
 	val close: Double,
+	val volume: Double,
+	val trades: Int,
 )
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -28,6 +30,8 @@ object BinanceKlineSerializer : KSerializer<BinanceKline> {
 			high = element[2].jsonPrimitive.double,
 			low = element[3].jsonPrimitive.double,
 			close = element[4].jsonPrimitive.double,
+			volume = element[5].jsonPrimitive.double,
+			trades = element[8].jsonPrimitive.int
 		)
 	}
 }
