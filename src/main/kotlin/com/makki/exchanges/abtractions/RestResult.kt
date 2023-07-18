@@ -43,29 +43,24 @@ sealed interface RestResult<T, E> {
 		}
 	}
 
-	@Suppress("UNCHECKED_CAST")
-	fun <F : Any> unwrap(): F? {
-		return (this as? Ok<F, Any>)?.data
+	fun unwrap(): T? {
+		return (this as? Ok<T, E>)?.data
 	}
 
-	@Suppress("UNCHECKED_CAST")
-	fun <E : Any> unwrapRestError(): E? {
-		return (this as? RestError<Any, E>)?.error
+	fun unwrapRestError(): E? {
+		return (this as? RestError<T, E>)?.error
 	}
 
-	@Suppress("UNCHECKED_CAST")
-	fun unwrapParseError(): ParseError<Any, Any>? {
-		return this as? ParseError<Any, Any>
+	fun unwrapParseError(): ParseError<T, E>? {
+		return this as? ParseError<T, E>
 	}
 
-	@Suppress("UNCHECKED_CAST")
-	fun unwrapHttpError(): HttpError<Any, Any>? {
-		return this as? HttpError<Any, Any>
+	fun unwrapHttpError(): HttpError<T, E>? {
+		return this as? HttpError<T, E>
 	}
 
-	@Suppress("UNCHECKED_CAST")
-	fun unwrapConnectionError(): ConnectionError<Any, Any>? {
-		return this as? ConnectionError<Any, Any>
+	fun unwrapConnectionError(): ConnectionError<T, E>? {
+		return this as? ConnectionError<T, E>
 	}
 
 	fun isOk(): Boolean {

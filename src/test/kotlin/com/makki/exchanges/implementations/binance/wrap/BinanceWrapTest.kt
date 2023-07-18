@@ -17,7 +17,7 @@ class BinanceWrapTest {
 		val response = BinanceWrap().klineData("BTCUSDT", "15m", limit = 10)
 		assert(response.isOk()) { response.toString() }
 
-		val klineList = response.unwrap<List<BinanceKline>>()
+		val klineList = response.unwrap()
 		assert(!klineList.isNullOrEmpty())
 		println(klineList)
 	}
@@ -30,7 +30,7 @@ class BinanceWrapTest {
 		val mockedApi = BinanceApi(mockedClient)
 		val response = BinanceWrap(mockedApi).klineData("BTCUSDT", "15m")
 		assert(response.isRestError())
-		val error = response.unwrapRestError<SealedApiError>()
+		val error = response.unwrapRestError()
 		assert(error is SealedApiError.Banned)
 	}
 

@@ -62,9 +62,9 @@ class BinanceSocketTest {
 
 		socket.start()
 
-		delay(10000)
+		delay(5000)
 		socket.close()
-		delay(8000)
+		delay(2000)
 
 		assert(buffer.isNotEmpty())
 	}

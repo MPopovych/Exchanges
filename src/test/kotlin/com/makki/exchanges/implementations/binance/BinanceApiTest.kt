@@ -4,8 +4,6 @@ import com.makki.exchanges.abtractions.JsonParser
 import com.makki.exchanges.asyncTest
 import com.makki.exchanges.implementations.BasicResponse
 import com.makki.exchanges.implementations.MockClient
-import com.makki.exchanges.implementations.binance.models.BinanceKline
-import com.makki.exchanges.implementations.binance.models.BinanceMarketInfo
 import io.ktor.util.network.*
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test
@@ -17,7 +15,7 @@ class BinanceApiTest {
 		val response = BinanceApi().marketInfo()
 		assert(response.isOk()) { response.unwrapParseError()?.exception?.stackTraceToString() ?: "" }
 
-		val klineList = response.unwrap<BinanceMarketInfo>()
+		val klineList = response.unwrap()
 		println(klineList?.symbols?.size)
 	}
 
@@ -26,7 +24,7 @@ class BinanceApiTest {
 		val response = BinanceApi().klineData("BTCUSDT", "15m", limit = 10)
 		assert(response.isOk()) { response.toString() }
 
-		val klineList = response.unwrap<List<BinanceKline>>()
+		val klineList = response.unwrap()
 		assert(!klineList.isNullOrEmpty())
 		println(klineList)
 	}
@@ -37,7 +35,7 @@ class BinanceApiTest {
 		val errorJson = JsonParser.default.encodeToString(error)
 		val mock = MockClient { _ -> BasicResponse.Ok(200, errorJson, 0) }
 		val response = BinanceApi(mock).klineData("BTCUSDT", "15m")
-		assert(response.isRestError() && response.unwrapRestError<BinanceApi.BinanceError>() != null)
+		assert(response.isRestError() && response.unwrapRestError() != null)
 	}
 
 	@Test
@@ -85,7 +83,7 @@ class BinanceApiTest {
 		val response = BinanceApi(mock).klineData("BTCUSDT", "15m")
 
 		assert(response.isOk())
-		val klineList = response.unwrap<List<BinanceKline>>()
+		val klineList = response.unwrap()
 		assert(!klineList.isNullOrEmpty())
 		val kline = klineList!![0]
 		assert(kline.start == 1499040000000)
