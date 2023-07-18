@@ -5,6 +5,7 @@ import com.makki.exchanges.implementations.binance.BinanceApi
 import com.makki.exchanges.implementations.binance.models.BinanceKline
 import com.makki.exchanges.implementations.binance.models.BinanceMarketPair
 import com.makki.exchanges.implementations.binance.models.BinanceMarketPairFilter
+import com.makki.exchanges.implementations.binance.models.BinanceSocketKlineAsset
 import com.makki.exchanges.models.DetailedMarketPair
 import com.makki.exchanges.tools.inIgC
 import com.makki.exchanges.tools.produceError
@@ -33,7 +34,18 @@ internal fun binancePairToGeneric(p: BinanceMarketPair): MarketPair {
 	)
 }
 
-
+internal fun binanceKlineSocketToGeneric(k: BinanceSocketKlineAsset): KlineEntry {
+	return KlineEntry(
+		start = k.start,
+		end = k.end,
+		open = k.open,
+		high = k.high,
+		low = k.low,
+		close = k.close,
+		volume = k.volume,
+		trades = k.trades,
+	)
+}
 
 internal fun binanceKlineToGeneric(k: BinanceKline): KlineEntry {
 	return KlineEntry(

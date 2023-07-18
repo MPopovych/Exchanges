@@ -7,7 +7,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.take
 
-class MockSocket(val handler: suspend () -> String) : BasicSocket() {
+class MockSocket(
+	private val intervalMs: Long = 500,
+	private val handler: suspend () -> String,
+) : BasicSocket() {
 	private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
 	override suspend fun connect(url: String, block: suspend SocketSession.() -> Unit) {
@@ -15,7 +18,7 @@ class MockSocket(val handler: suspend () -> String) : BasicSocket() {
 		val job = scope.launch {
 			while (isActive) {
 				flow.emit(handler())
-				delay(500)
+				delay(intervalMs)
 			}
 		}
 		return block.invoke(MockSession(job, flow.asSharedFlow()))

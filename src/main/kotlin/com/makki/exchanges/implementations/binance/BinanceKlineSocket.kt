@@ -5,28 +5,25 @@ import com.makki.exchanges.abtractions.KlineInterval
 import com.makki.exchanges.implementations.SelfManagingSocket
 import com.makki.exchanges.implementations.binance.models.BinanceSocketKlineAsset
 import com.makki.exchanges.implementations.binance.models.BinanceSocketKlineMsg
-import com.makki.exchanges.logging.logger
-import com.makki.exchanges.logging.printLog
+import com.makki.exchanges.logging.defaultLogger
 import com.makki.exchanges.tools.CachedStateSubject
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.util.concurrent.CopyOnWriteArraySet
 
-class BinanceKlineSocket(private val intervalString: String) {
+class BinanceKlineSocket(socket: SelfManagingSocket? = null) {
 
-	constructor(interval: KlineInterval) : this(interval.apiCode)
-
-	private val logger = logger()
-	private val marketList = CopyOnWriteArraySet<String>()
+	private val logger = defaultLogger()
+	private val marketList = CopyOnWriteArraySet<Subscription>()
 	private val json = JsonParser.default
 
-	private val socket = SelfManagingSocket
+	private val socket = socket ?: (SelfManagingSocket
 		.builder("BinanceKlineSocket")
 		.url("wss://stream.binance.com:9443/ws/stream")
 		.onConnectionOpen {
 			this.send(getSubscriptionMessages())
 		}
-		.onTextMsg { parse(it) }.build()
+		.onTextMsg { parse(it) }.build())
 
 	private val subject = CachedStateSubject<BinanceSocketKlineAsset>(overflow = BufferOverflow.DROP_OLDEST)
 
@@ -47,13 +44,28 @@ class BinanceKlineSocket(private val intervalString: String) {
 	/**
 	 * runtime adding of market
 	 */
-	suspend fun addMarket(market: String) {
-		if (market in marketList) return
+	suspend fun addMarket(market: String, interval: String) {
+		val subscription = Subscription.of(market = market, interval = interval)
+		if (subscription in marketList) return
 
-		marketList.add(market)
-		val subMsg = wrapStreams(marketToRequest(market))
+		marketList.add(subscription)
+		val subMsg = wrapAddStreams(subscription.toStream())
 		socket.send(subMsg)
 	}
+
+	/**
+	 * This should be used carefully, might remove a shared subscription
+	 */
+	suspend fun removeMarket(market: String, interval: String) {
+		val subscription = Subscription.of(market = market, interval = interval)
+		if (subscription !in marketList) return
+
+		marketList.remove(subscription)
+		val subMsg = wrapRemoveStreams(subscription.toStream())
+		socket.send(subMsg)
+	}
+
+	suspend fun addMarket(market: String, interval: KlineInterval) = addMarket(market, interval.apiCode)
 
 	private suspend fun parse(msg: String) {
 		val kline: BinanceSocketKlineMsg = try {
@@ -67,16 +79,12 @@ class BinanceKlineSocket(private val intervalString: String) {
 		subject.emit(kline.k)
 	}
 
-	private fun marketToRequest(market: String): String {
-		return "\"${market.lowercase()}@kline_${intervalString}\""
-	}
-
 	private fun getSubscriptionMessages(): String {
-		val streams = marketList.joinToString(",") { marketToRequest(it) }
-		return wrapStreams(streams)
+		val streams = marketList.joinToString(",") { s -> s.toStream() }
+		return wrapAddStreams(streams)
 	}
 
-	private fun wrapStreams(streams: String): String {
+	private fun wrapAddStreams(streams: String): String {
 		return """
 {
   "method": "SUBSCRIBE",
@@ -86,6 +94,30 @@ class BinanceKlineSocket(private val intervalString: String) {
   "id": 1
 }
 """
+	}
+
+	private fun wrapRemoveStreams(streams: String): String {
+		return """
+{
+  "method": "UNSUBSCRIBE",
+  "params": [
+    $streams
+  ],
+  "id": 1
+}
+"""
+	}
+
+	@Suppress("DataClassPrivateConstructor")
+	private data class Subscription private constructor(val market: String, val interval: String) {
+		companion object {
+			fun of(market: String, interval: String): Subscription {
+				return Subscription(market.lowercase(), interval.lowercase())
+			}
+		}
+		fun toStream(): String {
+			return "\"${market}@kline_${interval}\""
+		}
 	}
 
 }

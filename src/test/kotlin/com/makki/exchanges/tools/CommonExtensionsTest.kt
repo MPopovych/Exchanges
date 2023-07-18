@@ -1,8 +1,8 @@
 package com.makki.exchanges.tools
 
 import org.junit.jupiter.api.assertThrows
-import kotlin.Exception
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class CommonExtensionsTest {
 
@@ -42,6 +42,15 @@ class CommonExtensionsTest {
 
 		assert("123000".removeTrailingZeroes() == "123000")
 		assert("123.000".removeTrailingZeroes() == "123")
+	}
+
+	@Test
+	fun testEllipsis() {
+		assertEquals("test...", "test string".ellipsis(5))
+		assertEquals("test...", "test\nstring".ellipsisSingleLine(5))
+		assertThrows<Exception> {
+			"throw".ellipsis(0)
+		}
 	}
 
 }

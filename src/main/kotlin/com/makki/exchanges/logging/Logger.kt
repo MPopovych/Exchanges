@@ -85,7 +85,7 @@ class Logger internal constructor(
 
 }
 
-fun Any.logger(): Logger {
+fun Any.defaultLogger(): Logger {
 	return this.loggerBuilder().build()
 }
 

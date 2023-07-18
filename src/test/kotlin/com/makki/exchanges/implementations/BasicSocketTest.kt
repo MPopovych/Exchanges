@@ -6,7 +6,6 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.timeout
-import java.time.Duration
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -22,7 +21,7 @@ class BasicSocketTest {
 
 		val socket = SelfManagingSocket.builder("MockSocket")
 			.url("wss://www.nonexistingwebpage.com:4443/stream")
-			.socket(MockSocket {
+			.socket(MockSocket(intervalMs = 100) {
 				validationMsg
 			})
 			.onTextMsg {

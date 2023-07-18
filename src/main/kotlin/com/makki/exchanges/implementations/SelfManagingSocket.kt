@@ -1,7 +1,7 @@
 package com.makki.exchanges.implementations
 
-import com.makki.exchanges.logging.printLog
-import com.makki.exchanges.logging.printLogRed
+import com.makki.exchanges.logging.extLog
+import com.makki.exchanges.logging.extLogRed
 import com.makki.exchanges.tools.RetryTimer
 import kotlinx.coroutines.*
 import java.lang.ref.WeakReference
@@ -172,11 +172,11 @@ class SelfManagingSocket(
 	}
 
 	private fun logMsg(msg: String) {
-		printLog(msg)
+		extLog(msg)
 	}
 
 	private fun logError(msg: String) {
-		printLogRed(msg)
+		extLogRed(msg)
 	}
 
 	companion object {

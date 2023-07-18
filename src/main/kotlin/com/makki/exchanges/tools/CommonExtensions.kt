@@ -22,6 +22,18 @@ fun String.findPrecision(): Int {
 	}
 }
 
+fun String.ellipsis(size: Int): String {
+	require(size > 0)
+	if (this.length > size) {
+		return "${this.take(size).trim()}..."
+	}
+	return this
+}
+
+fun String.ellipsisSingleLine(size: Int): String {
+	return this.replace("\n", " ").ellipsis(size)
+}
+
 fun Number.roundToDec(precision: Int, rounding: RoundingMode = RoundingMode.HALF_EVEN): BigDecimal {
 	return this.toDouble().toBigDecimal().setScale(precision, rounding)
 }

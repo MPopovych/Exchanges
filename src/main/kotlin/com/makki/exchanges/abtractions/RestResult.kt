@@ -1,5 +1,7 @@
 package com.makki.exchanges.abtractions
 
+import com.makki.exchanges.tools.ellipsisSingleLine
+
 sealed interface RestResult<T, E> {
 	data class Ok<T, E>(val data: T) : RestResult<T, E>
 
@@ -85,5 +87,17 @@ sealed interface RestResult<T, E> {
 
 	fun isConnectionError(): Boolean {
 		return this is ConnectionError
+	}
+
+	fun descriptionString(): String {
+		return when (this) {
+			is Ok -> "Ok: ${this.data.toString().ellipsisSingleLine(10)}"
+			is ConnectionError -> "Connection error: ${exception.message?.ellipsisSingleLine(30)}"
+			is RestError -> "Rest error: ${this.error.toString().ellipsisSingleLine(30)}"
+			is HttpError -> "Http error $code"
+			is ParseError -> {
+				"Parse error: ${exception.message?.ellipsisSingleLine(30)} " + "of json: ${json.ellipsisSingleLine(30)}"
+			}
+		}
 	}
 }

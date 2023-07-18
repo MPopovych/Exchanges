@@ -45,6 +45,8 @@ data class BinanceSocketKlineMsg(
 
 @Serializable
 data class BinanceSocketKlineAsset(
+	@SerialName("s")
+	val market: String,
 	@SerialName("t")
 	val start: Long,
 	@SerialName("T")

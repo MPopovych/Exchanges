@@ -2,15 +2,16 @@ package com.makki.exchanges.implementations.binance.wrap
 
 import com.makki.exchanges.abtractions.RestResult
 import com.makki.exchanges.implementations.binance.BinanceApi
+import com.makki.exchanges.implementations.binance.BinanceKlineSocket
 import com.makki.exchanges.implementations.binance.BinanceUtils
-import com.makki.exchanges.logging.printLogRed
+import com.makki.exchanges.logging.defaultLogger
 import com.makki.exchanges.models.KlineEntry
 import com.makki.exchanges.models.MarketPair
 import com.makki.exchanges.tools.CachedStateSubject
+import com.makki.exchanges.tools.eqIgC
 import com.makki.exchanges.wrapper.*
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.*
 
 /**
  * This wrapper defines supported features via traits
@@ -18,9 +19,20 @@ import kotlinx.coroutines.flow.asSharedFlow
  * This allows to abstract away from a specific exchange in most cases
  */
 open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper, WrapTraitApiKline,
-	WrapTraitErrorStream, WrapTraitApiMarketInfo {
+	WrapTraitErrorStream, WrapTraitApiMarketInfo, WrapTraitSocketKline {
 
 	private val errorFlow = CachedStateSubject<RestResult<*, SealedApiError>>(BufferOverflow.DROP_OLDEST)
+	private val logger = defaultLogger()
+
+	private val binanceSocket = BinanceKlineSocket()
+
+	override suspend fun trackKline(market: String, interval: String): Flow<KlineEntry> {
+		binanceSocket.addMarket(market, interval) // checks internally for an existing one
+
+		return binanceSocket.observe()
+			.filter { it.market.eqIgC(market) }
+			.map { k -> binanceKlineSocketToGeneric(k) }
+	}
 
 	override suspend fun trackErrors(): Flow<RestResult<*, SealedApiError>> {
 		return errorFlow.asSharedFlow()
@@ -75,7 +87,7 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 	): SealedApiError {
 		return toSealedApiErrorExt(market, orderId).also {
 			if (it is SealedApiError.Unexpected) {
-				this@BinanceWrap.printLogRed("Unhandled error $it from $this")
+				logger.printError("Unhandled error $it from $this")
 			}
 		}
 	}
@@ -83,13 +95,17 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 	protected open fun RestResult.HttpError<*, *>.toSealedError(): SealedApiError? {
 		return toSealedErrorExt().also {
 			if (it is SealedApiError.Unexpected) {
-				this@BinanceWrap.printLogRed("Unhandled error $it from $this")
+				logger.printError("Unhandled error $it from $this")
 			}
 		}
 	}
 
 	private fun acceptResult(result: RestResult<*, SealedApiError>) {
 		errorFlow.tryEmit(result)
+	}
+
+	override fun readApiName(marketPair: MarketPair): String {
+		return BinanceUtils.getApiMarketName(marketPair)
 	}
 
 }

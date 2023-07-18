@@ -1,7 +1,7 @@
 package com.makki.exchanges.logging
 
 object GlobalLogger {
-	var logger = logger()
+	var logger = defaultLogger()
 }
 
 fun Any.extLogError(msg: Any) = GlobalLogger.logger.printError(msg, callerName())

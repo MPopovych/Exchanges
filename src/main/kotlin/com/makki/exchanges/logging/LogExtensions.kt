@@ -1,32 +1,32 @@
 package com.makki.exchanges.logging
 
-fun Any.printLog(msg: Any, color: String = ColorCodes.ANSI_WHITE) {
+fun Any.extLog(msg: Any, color: String = ColorCodes.ANSI_WHITE) {
 	println("[${this::class.simpleName}] -> $msg".wrapColor(color))
 }
 
-fun Any.printLogGray(msg: Any) {
-	printLog(msg, ColorCodes.ANSI_GRAY)
+fun Any.extLogGray(msg: Any) {
+	extLog(msg, ColorCodes.ANSI_GRAY)
 }
 
 
-fun Any.printLogRed(msg: Any) {
-	printLog(msg, ColorCodes.ANSI_RED)
+fun Any.extLogRed(msg: Any) {
+	extLog(msg, ColorCodes.ANSI_RED)
 }
 
-fun Any.printLogGreen(msg: Any) {
-	printLog(msg, ColorCodes.ANSI_GREEN)
+fun Any.extLogGreen(msg: Any) {
+	extLog(msg, ColorCodes.ANSI_GREEN)
 }
 
-fun Any.printLogBlue(msg: Any) {
-	printLog(msg, ColorCodes.ANSI_BLUE)
+fun Any.extLogBlue(msg: Any) {
+	extLog(msg, ColorCodes.ANSI_BLUE)
 }
 
-fun Any.printLogYellow(msg: Any) {
-	printLog(msg, ColorCodes.ANSI_YELLOW)
+fun Any.extLogYellow(msg: Any) {
+	extLog(msg, ColorCodes.ANSI_YELLOW)
 }
 
-fun Any.printLogPurple(msg: Any) {
-	printLog(msg, ColorCodes.ANSI_PURPLE)
+fun Any.extLogPurple(msg: Any) {
+	extLog(msg, ColorCodes.ANSI_PURPLE)
 }
 
 private fun String.wrapColor(color: String): String {

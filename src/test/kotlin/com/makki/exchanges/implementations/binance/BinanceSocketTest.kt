@@ -15,12 +15,12 @@ class BinanceSocketTest {
 	@Test
 	fun testBinanceSocket() = asyncTest {
 		val validCount = 5
-		val socket = BinanceKlineSocket(BinanceKlineInterval.Minutes15)
+		val socket = BinanceKlineSocket()
 
-		socket.addMarket("btcusdt")
+		socket.addMarket("btcusdt", BinanceKlineInterval.Minutes15)
 		socket.start()
 		delay(500)
-		socket.addMarket("ethusdt")
+		socket.addMarket("ethusdt", BinanceKlineInterval.Minutes15)
 
 		val list = withTimeout(10000) {
 			return@withTimeout socket.observe().onEach {
