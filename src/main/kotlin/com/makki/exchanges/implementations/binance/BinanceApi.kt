@@ -1,15 +1,15 @@
 package com.makki.exchanges.implementations.binance
 
+import com.makki.exchanges.abtractions.Client
 import com.makki.exchanges.abtractions.RestApi
 import com.makki.exchanges.abtractions.RestResult
 import com.makki.exchanges.abtractions.defaultParse
 import com.makki.exchanges.implementations.BasicClient
 import com.makki.exchanges.implementations.binance.models.BinanceKline
 import com.makki.exchanges.implementations.binance.models.BinanceMarketInfo
-import com.makki.exchanges.implementations.binance.models.BinanceMarketPair
 import kotlinx.serialization.Serializable
 
-class BinanceApi(private val httpClient: BasicClient = BasicClient.builder().build()) : RestApi {
+class BinanceApi(private val httpClient: Client = BasicClient.builder().build()) : RestApi {
 
 	companion object {
 		const val BASE_URL = "https://api.binance.com"

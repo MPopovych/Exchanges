@@ -2,13 +2,12 @@ package com.makki.exchanges.implementations.binance.wrap
 
 import com.makki.exchanges.abtractions.RestResult
 import com.makki.exchanges.implementations.binance.BinanceApi
+import com.makki.exchanges.implementations.binance.BinanceUtils
 import com.makki.exchanges.logging.printLogRed
-import com.makki.exchanges.tools.CachedSubject
-import com.makki.exchanges.wrapper.ApiWrapper
-import com.makki.exchanges.wrapper.SealedApiError
-import com.makki.exchanges.wrapper.WrapTraitApiKline
-import com.makki.exchanges.wrapper.WrapTraitErrorStream
-import com.makki.exchanges.wrapper.models.KlineEntry
+import com.makki.exchanges.models.KlineEntry
+import com.makki.exchanges.models.MarketPair
+import com.makki.exchanges.tools.CachedStateSubject
+import com.makki.exchanges.wrapper.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -18,12 +17,31 @@ import kotlinx.coroutines.flow.asSharedFlow
  * Also it maps the exchange specific model onto more generic models
  * This allows to abstract away from a specific exchange in most cases
  */
-open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper, WrapTraitApiKline, WrapTraitErrorStream {
+open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper, WrapTraitApiKline,
+	WrapTraitErrorStream, WrapTraitApiMarketInfo {
 
-	private val errorFlow = CachedSubject<RestResult<*, SealedApiError>>(BufferOverflow.DROP_OLDEST)
+	private val errorFlow = CachedStateSubject<RestResult<*, SealedApiError>>(BufferOverflow.DROP_OLDEST)
 
 	override suspend fun trackErrors(): Flow<RestResult<*, SealedApiError>> {
 		return errorFlow.asSharedFlow()
+	}
+
+	override suspend fun marketInfo(): RestResult<List<MarketPair>, SealedApiError> {
+		val response = api.marketInfo()
+
+		return response.map { marketInfo ->
+			marketInfo.symbols
+				.filter { it.status == BinanceUtils.CONST_MARKET_TRADING }
+				.map {
+					binancePairToGeneric(it)
+				}
+		}.mapRestError {
+			it.toSealedApiError()
+		}.mapHttpErrorToRestError {
+			it.toSealedError()
+		}.also {
+			acceptResult(it)
+		}
 	}
 
 	override suspend fun klineData(
@@ -56,13 +74,17 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 		orderId: String? = null,
 	): SealedApiError {
 		return toSealedApiErrorExt(market, orderId).also {
-			this@BinanceWrap.printLogRed("Unhandled error $it from $this")
+			if (it is SealedApiError.Unexpected) {
+				this@BinanceWrap.printLogRed("Unhandled error $it from $this")
+			}
 		}
 	}
 
 	protected open fun RestResult.HttpError<*, *>.toSealedError(): SealedApiError? {
 		return toSealedErrorExt().also {
-			this@BinanceWrap.printLogRed("Unhandled error $it from $this")
+			if (it is SealedApiError.Unexpected) {
+				this@BinanceWrap.printLogRed("Unhandled error $it from $this")
+			}
 		}
 	}
 

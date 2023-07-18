@@ -1,7 +1,8 @@
 package com.makki.exchanges.wrapper
 
 import com.makki.exchanges.abtractions.RestResult
-import com.makki.exchanges.wrapper.models.KlineEntry
+import com.makki.exchanges.models.KlineEntry
+import com.makki.exchanges.models.MarketPair
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -29,6 +30,10 @@ interface WrapTraitApiKline {
 		limit: Int = 500,
 		range: LongRange? = null
 	): RestResult<List<KlineEntry>, SealedApiError>
+}
+
+interface WrapTraitApiMarketInfo {
+	suspend fun marketInfo(): RestResult<List<MarketPair>, SealedApiError>
 }
 
 interface WrapTraitSocketKline {

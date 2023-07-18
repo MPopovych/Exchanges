@@ -2,10 +2,8 @@ package com.makki.exchanges.implementations
 
 import com.makki.exchanges.logging.printLog
 import com.makki.exchanges.logging.printLogRed
-import com.makki.exchanges.tools.CachedSubject
 import com.makki.exchanges.tools.RetryTimer
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.BufferOverflow
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -164,7 +162,7 @@ class SelfManagingSocket(
 
 	private suspend fun SocketSession.handleMsg() {
 		while (this.isActive()) {
-			val result = when (val msg = this.receive()) {
+			 when (val msg = this.receive()) {
 				is SocketFrame.Binary -> binaryBlock?.invoke(this@SelfManagingSocket, msg.data) ?: continue
 				is SocketFrame.Text -> block(this@SelfManagingSocket, msg.data)
 				is SocketFrame.Close -> break

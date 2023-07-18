@@ -1,5 +1,6 @@
 package com.makki.exchanges.implementations
 
+import com.makki.exchanges.abtractions.ClientResponse
 import com.makki.exchanges.abtractions.Client
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
@@ -22,27 +23,17 @@ open class BasicClient internal constructor(
 		}
 	}
 
-	open suspend fun get(url: String): BasicResponse {
+	override suspend fun get(url: String): ClientResponse {
 		val response: HttpResponse = try {
 			httpClient.get(urlString = url)
 		} catch (e: Exception) {
-			return BasicResponse.Error(e)
+			return ClientResponse.Error(e)
 		}
 		val text = response.bodyAsText()
 		val httpCode = response.status.value
 		val time = response.responseTime.timestamp - response.requestTime.timestamp
-		return BasicResponse.Ok(httpCode, text, time)
+		return ClientResponse.Ok(httpCode, text, time)
 	}
-}
-
-sealed interface BasicResponse {
-	data class Ok(
-		val httpCode: Int,
-		val text: String,
-		val time: Long,
-	) : BasicResponse
-
-	class Error(val e: Exception) : BasicResponse
 }
 
 class ClientBuilder {

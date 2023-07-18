@@ -19,6 +19,7 @@ class BinanceMarketPair(
 	@SerialName("isSpotTradingAllowed")
 	val spotAllowed: Boolean,
 	val orderTypes: List<String>,
+	val filters: List<BinanceMarketPairFilter>
 )
 
 @Serializable(with = BinanceFilterSerializer::class)
@@ -27,14 +28,14 @@ sealed class BinanceMarketPairFilter {
 	data class PriceFilter(
 		val minPrice: Double,
 		val maxPrice: Double,
-		val tickSize: Double,
+		val tickSize: String,
 	) : BinanceMarketPairFilter()
 
 	@Serializable
 	data class LotSizeFilter(
 		val minQty: Double,
 		val maxQty: Double,
-		val stepSize: Double,
+		val stepSize: String,
 	) : BinanceMarketPairFilter()
 
 	@Serializable
@@ -49,16 +50,11 @@ object BinanceFilterSerializer :
 		element: JsonElement,
 	): DeserializationStrategy<BinanceMarketPairFilter> {
 
-		return when (element.jsonObject["filterType"]?.jsonPrimitive?.stringOrNull()) {
+		return when (element.jsonObject["filterType"]?.jsonPrimitive?.contentOrNull) {
 			"PRICE_FILTER" -> BinanceMarketPairFilter.PriceFilter.serializer()
 			"LOT_SIZE" -> BinanceMarketPairFilter.LotSizeFilter.serializer()
 			else -> BinanceMarketPairFilter.Unknown.serializer()
 		}
-	}
-
-	private fun JsonPrimitive.stringOrNull(): String? {
-		return if (isString) toString()
-		else null
 	}
 }
 

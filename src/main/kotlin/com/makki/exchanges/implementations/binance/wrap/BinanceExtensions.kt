@@ -3,11 +3,37 @@ package com.makki.exchanges.implementations.binance.wrap
 import com.makki.exchanges.abtractions.RestResult
 import com.makki.exchanges.implementations.binance.BinanceApi
 import com.makki.exchanges.implementations.binance.models.BinanceKline
-import com.makki.exchanges.logging.printLogRed
-import com.makki.exchanges.tools.inC
+import com.makki.exchanges.implementations.binance.models.BinanceMarketPair
+import com.makki.exchanges.implementations.binance.models.BinanceMarketPairFilter
+import com.makki.exchanges.models.DetailedMarketPair
+import com.makki.exchanges.tools.inIgC
 import com.makki.exchanges.tools.produceError
 import com.makki.exchanges.wrapper.SealedApiError
-import com.makki.exchanges.wrapper.models.KlineEntry
+import com.makki.exchanges.models.KlineEntry
+import com.makki.exchanges.models.MarketPair
+import com.makki.exchanges.tools.findPrecision
+
+internal fun binancePairToGeneric(p: BinanceMarketPair): MarketPair {
+	val lotSizeFilter = p.filters.firstNotNullOfOrNull { it as? BinanceMarketPairFilter.LotSizeFilter }
+	val priceFilter = p.filters.firstNotNullOfOrNull { it as? BinanceMarketPairFilter.PriceFilter }
+
+	// find '1' in 10.000 or 0.0001
+	val filterBasePrecision = lotSizeFilter?.stepSize?.findPrecision()
+	val filterQuotePrecision = priceFilter?.tickSize?.findPrecision()
+
+	return DetailedMarketPair(
+		base = p.base,
+		quote = p.quote,
+		basePrecision = filterBasePrecision ?: p.basePrecision,
+		quotePrecision = filterQuotePrecision ?: p.quotePrecision,
+		minBaseVolume = lotSizeFilter?.minQty ?: 0.0,
+		minBasePrice = priceFilter?.minPrice ?: 0.0,
+		takeRatio = 0.999, // hardcoded
+		makerRatio = 0.999 // hardcoded
+	)
+}
+
+
 
 internal fun binanceKlineToGeneric(k: BinanceKline): KlineEntry {
 	return KlineEntry(
@@ -49,8 +75,8 @@ internal fun BinanceApi.BinanceError.toSealedApiErrorExt(
 	if (byCode != null) return byCode
 
 	val byMsg = when {
-		msg.inC("Invalid API-key, IP, or permissions for action") -> SealedApiError.InvalidAuth
-		msg.inC("LOT_SIZE") || msg.inC("MIN_NOTIONAL") || msg.inC("Invalid quantity") -> {
+		msg.inIgC("Invalid API-key, IP, or permissions for action") -> SealedApiError.InvalidAuth
+		msg.inIgC("LOT_SIZE") || msg.inIgC("MIN_NOTIONAL") || msg.inIgC("Invalid quantity") -> {
 			SealedApiError.Order.InsufficientBalance(orderId ?: produceError())
 		}
 		else -> null

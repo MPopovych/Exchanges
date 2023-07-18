@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.take
 
 class MockSocket(val handler: suspend () -> String) : BasicSocket() {
-
 	private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
 	override suspend fun connect(url: String, block: suspend SocketSession.() -> Unit) {
@@ -21,11 +20,9 @@ class MockSocket(val handler: suspend () -> String) : BasicSocket() {
 		}
 		return block.invoke(MockSession(job, flow.asSharedFlow()))
 	}
-
 }
 
 class MockSession(private val job: Job, private val readFlow: SharedFlow<String>) : SocketSession {
-
 	override suspend fun receive(): SocketFrame {
 		return SocketFrame.Text(readFlow.take(1).single())
 	}

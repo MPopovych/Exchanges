@@ -1,4 +1,4 @@
-package com.makki.exchanges.wrapper.models
+package com.makki.exchanges.models
 
 import kotlinx.serialization.Serializable
 

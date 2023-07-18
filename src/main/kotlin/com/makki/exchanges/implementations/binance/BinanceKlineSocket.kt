@@ -5,28 +5,30 @@ import com.makki.exchanges.abtractions.KlineInterval
 import com.makki.exchanges.implementations.SelfManagingSocket
 import com.makki.exchanges.implementations.binance.models.BinanceSocketKlineAsset
 import com.makki.exchanges.implementations.binance.models.BinanceSocketKlineMsg
+import com.makki.exchanges.logging.logger
 import com.makki.exchanges.logging.printLog
-import com.makki.exchanges.tools.CachedSubject
+import com.makki.exchanges.tools.CachedStateSubject
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.util.concurrent.CopyOnWriteArraySet
 
 class BinanceKlineSocket(private val intervalString: String) {
 
-	constructor(interval: KlineInterval): this(interval.apiCode)
+	constructor(interval: KlineInterval) : this(interval.apiCode)
 
+	private val logger = logger()
 	private val marketList = CopyOnWriteArraySet<String>()
 	private val json = JsonParser.default
 
-	private val socket = SelfManagingSocket.builder("BinanceKlineSocket")
+	private val socket = SelfManagingSocket
+		.builder("BinanceKlineSocket")
 		.url("wss://stream.binance.com:9443/ws/stream")
 		.onConnectionOpen {
 			this.send(getSubscriptionMessages())
 		}
-		.onTextMsg { parse(it) }
-		.build()
+		.onTextMsg { parse(it) }.build()
 
-	private val subject = CachedSubject<BinanceSocketKlineAsset>(overflow = BufferOverflow.DROP_OLDEST)
+	private val subject = CachedStateSubject<BinanceSocketKlineAsset>(overflow = BufferOverflow.DROP_OLDEST)
 
 	fun observe() = subject.asSharedFlow()
 
@@ -58,7 +60,7 @@ class BinanceKlineSocket(private val intervalString: String) {
 			json.decodeFromString<BinanceSocketKlineMsg>(msg)
 		} catch (e: Exception) {
 			if (msg.contains("code") || msg.contains("msg")) {
-				printLog("Error in socket, response: $msg")
+				logger.printError("Error in socket, response: $msg")
 			}
 			return
 		}

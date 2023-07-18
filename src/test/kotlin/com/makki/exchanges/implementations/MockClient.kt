@@ -1,9 +1,10 @@
 package com.makki.exchanges.implementations
 
-class MockClient(val handler: suspend (String) -> BasicResponse) : BasicClient(0) {
+import com.makki.exchanges.abtractions.Client
+import com.makki.exchanges.abtractions.ClientResponse
 
-	override suspend fun get(url: String): BasicResponse {
+class MockClient(val handler: suspend (String) -> ClientResponse) : Client {
+	override suspend fun get(url: String): ClientResponse {
 		return handler(url)
 	}
-
 }
