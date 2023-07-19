@@ -33,6 +33,12 @@ interface MarketRatioTrait : MarketPair {
 	val takeRatio: Double
 }
 
+data class SimpleMarketPair(
+	override val base: String,
+	override val quote: String,
+): MarketPair
+
+
 data class DetailedMarketPair(
 	override val base: String,
 	override val quote: String,

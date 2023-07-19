@@ -8,6 +8,8 @@ import com.makki.exchanges.implementations.BasicClient
 import com.makki.exchanges.implementations.binance.models.BinanceKline
 import com.makki.exchanges.implementations.binance.models.BinanceMarketInfo
 import kotlinx.serialization.Serializable
+import kotlin.math.max
+import kotlin.math.min
 
 class BinanceApi(private val httpClient: Client = BasicClient.builder().build()) : RestApi {
 
@@ -23,11 +25,16 @@ class BinanceApi(private val httpClient: Client = BasicClient.builder().build())
 		market: String,
 		interval: String,
 		limit: Int = 500,
-		startTime: Long,
-		endTime: Long,
+		startMs: Long,
+		endMs: Long,
 	): RestResult<List<BinanceKline>, BinanceError> {
+		val cappedLimit = max(min(limit, 1000), 10)
 		val queryMap = mapOf(
-			"symbol" to market, "interval" to interval, "limit" to limit, "startTime" to startTime, "endTime" to endTime
+			"symbol" to market,
+			"interval" to interval,
+			"limit" to cappedLimit,
+			"startTime" to startMs,
+			"endTime" to endMs
 		).toQuery()
 		return publicApiGetMethod<List<BinanceKline>>("api/v3/klines", queryMap)
 	}
@@ -37,8 +44,9 @@ class BinanceApi(private val httpClient: Client = BasicClient.builder().build())
 		interval: String,
 		limit: Int = 500,
 	): RestResult<List<BinanceKline>, BinanceError> {
+		val cappedLimit = max(min(limit, 1000), 10)
 		val queryMap = mapOf(
-			"symbol" to market, "interval" to interval, "limit" to limit
+			"symbol" to market, "interval" to interval, "limit" to cappedLimit
 		).toQuery()
 
 		return publicApiGetMethod<List<BinanceKline>>("api/v3/klines", queryMap)

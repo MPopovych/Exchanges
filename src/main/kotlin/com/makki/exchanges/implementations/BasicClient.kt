@@ -17,7 +17,6 @@ open class BasicClient internal constructor(
 	}
 
 	private val httpClient = HttpClient(CIO) {
-		expectSuccess = true
 		engine {
 			requestTimeout = timeout
 		}

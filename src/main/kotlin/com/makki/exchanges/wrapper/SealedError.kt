@@ -21,48 +21,45 @@ sealed interface SealedApiError {
 	/**
 	 * Needs new auth api key
 	 */
-	data object InvalidAuth : SealedApiError
+	data object InvalidAuth : SealedApiError, ErrorTags.Persisting
 
 	/**
 	 * Critical
 	 */
-	data object Banned : SealedApiError
+	data object Banned : SealedApiError, ErrorTags.Persisting
 
 	/**
 	 * Can be retried right away or handled
 	 */
-	data object NonceRaceCondition : SealedApiError
-	data object InternalExchangeError : SealedApiError
+	data object NonceRaceCondition : SealedApiError, ErrorTags.Temporary
+	data object InternalExchangeError : SealedApiError, ErrorTags.Temporary
 
 	/**
 	 * May be internal or external, should do a retry with a longer delay
 	 */
-	data class RateLimited(val internal: Boolean) : SealedApiError
+	data object RateLimited : SealedApiError, ErrorTags.Temporary, ErrorTags.LogicMiss
 
 	/**
 	 * Example cloud service is down
 	 */
-	data object ExchangeIsOutOfService : SealedApiError
+	data object ExchangeIsOutOfService : SealedApiError, ErrorTags.Temporary
 
 	/**
 	 * Usually temporary
 	 */
-	data class MarketBlocked(val market: String) : SealedApiError
+	data object MarketBlocked : SealedApiError, ErrorTags.Temporary
 
 	sealed interface Order : SealedApiError {
-		val orderId: String
+		data object ArgumentFail : Order, ErrorTags.LogicMiss
+		data object OrderNotFound : Order
+		data object AlreadyCancelled : Order
+		data object InsufficientBalance : Order
+		data object VolumeLessThanMinimum : Order, ErrorTags.LogicMiss
+		data object PriceFillMiss : Order
 
-		data class ArgumentFail(override val orderId: String) : Order
-		data class OrderNotFound(override val orderId: String) : Order
-		data class AlreadyCancelled(override val orderId: String) : Order
-		data class InsufficientBalance(override val orderId: String) : Order
-		data class VolumeLessThanMinimum(override val orderId: String) : Order
-		data class PriceFillMiss(override val orderId: String) : Order
 		/**
 		 * May need recovery
 		 */
-		data class OrderTimeout(override val orderId: String) : Order
+		data object OrderTimeout : Order, ErrorTags.Temporary
 	}
-
-
 }

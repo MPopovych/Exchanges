@@ -7,7 +7,9 @@ sealed interface RestResult<T, E> {
 
 	sealed interface Error<T, E> : RestResult<T, E>
 	data class RestError<T, E>(val error: E) : Error<T, E>
-	data class HttpError<T, E>(val code: Int) : Error<T, E>
+	data class HttpError<T, E>(val code: Int) : Error<T, E> {
+		fun toEnum(): HttpCodeDescription = HttpCodeDescription.findError(code)
+	}
 	data class ParseError<T, E>(val exception: Exception, val json: String) : Error<T, E>
 	data class ConnectionError<T, E>(val exception: Exception) : Error<T, E>
 
@@ -91,9 +93,16 @@ sealed interface RestResult<T, E> {
 
 	fun descriptionString(): String {
 		return when (this) {
-			is Ok -> "Ok: ${this.data.toString().ellipsisSingleLine(10)}"
-			is ConnectionError -> "Connection error: ${exception.message?.ellipsisSingleLine(30)}"
-			is RestError -> "Rest error: ${this.error.toString().ellipsisSingleLine(30)}"
+			is Ok -> {
+				val count = if (data is Collection<*>) {
+					"size: ${data.size}"
+				} else {
+					""
+				}
+				"Ok: ${this.data.toString().ellipsisSingleLine(30)} $count"
+			}
+			is ConnectionError -> "Connection error: ${exception.message?.ellipsisSingleLine(100)}"
+			is RestError -> "Rest error: ${this.error.toString().ellipsisSingleLine(80)}"
 			is HttpError -> "Http error $code"
 			is ParseError -> {
 				"Parse error: ${exception.message?.ellipsisSingleLine(30)} " + "of json: ${json.ellipsisSingleLine(30)}"

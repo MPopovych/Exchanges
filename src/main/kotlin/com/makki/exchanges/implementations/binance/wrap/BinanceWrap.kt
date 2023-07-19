@@ -70,7 +70,7 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 		return response.map { binanceKlines ->
 			binanceKlines.map { k -> binanceKlineToGeneric(k) }
 		}.mapRestError {
-			it.toSealedApiError(market = market)
+			it.toSealedApiError()
 		}.mapHttpErrorToRestError {
 			it.toSealedError()
 		}.also {
@@ -81,11 +81,8 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 	/**
 	 * Mapping from binance error to enum class
 	 */
-	protected open fun BinanceApi.BinanceError.toSealedApiError(
-		market: String? = null,
-		orderId: String? = null,
-	): SealedApiError {
-		return toSealedApiErrorExt(market, orderId).also {
+	protected open fun BinanceApi.BinanceError.toSealedApiError(): SealedApiError {
+		return toSealedApiErrorExt().also {
 			if (it is SealedApiError.Unexpected) {
 				logger.printError("Unhandled error $it from $this")
 			}
