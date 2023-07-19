@@ -16,7 +16,9 @@ object KlineUtil {
 		var end = kline.first().end
 		kline.drop(1).forEach {
 			if (end + 1 != it.start) {
-				if (print) logger.printInfo("gap of ${it.start - end} in integrity validation at: $end - ${it.end}")
+				if (print) {
+					logger.printWarning("gap of ${it.start - end} in integrity validation at: $end - ${it.end}")
+				}
 				return false
 			}
 			end = it.end

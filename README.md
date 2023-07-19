@@ -3,14 +3,22 @@ This is a library is use for personal purposes as a **git submodule**.
 
 Written in pure Kotlin, built on gradle 8.1.1
 
-## Features
-- Public api (wip)
-- Websocket (wip)
 
-### Support
-- Binance
+## Public api support
+
+|  Exchange  | Market info | OrderBook | Kline | Ticker |
+|:----------:|:-----------:|:---------:|:-----:|:------:|
+|  Binance   |      +      |     -     |   +   |   -    |
+|     -      |      -      |     -     |   -   |   -    |
+
+## WebSocket support
+
+|  Exchange  | KLine | OrderBook  | Public Trades  | Private Trades |
+|:----------:|:-----:|:----------:|:--------------:|:--------------:|
+|  Binance   |   +   |     -      |       -        |       -        |
+|     -      |   -   |     -      |       -        |       -        |
 
 ### Plans
-- Auth methods
+- Authorised methods
 - OB sockets
 - Migrate exchanges from old library (private) onto this one

@@ -7,6 +7,8 @@ enum class LogLevel(val priority: Int) {
 	Error(0),
 	Warning(1),
 	Info(2),
+	InfoPositive(2),
+	InfoNegative(2),
 	Debug(3),
 }
 
@@ -47,6 +49,14 @@ class Logger internal constructor(
 		println(getMsgForLevel(msg, LogLevel.Info, caller) ?: return)
 	}
 
+	fun printInfoPositive(msg: Any, caller: String? = null) {
+		println(getMsgForLevel(msg, LogLevel.InfoPositive, caller) ?: return)
+	}
+
+	fun printInfoNegative(msg: Any, caller: String? = null) {
+		println(getMsgForLevel(msg, LogLevel.InfoNegative, caller) ?: return)
+	}
+
 	fun printWarning(msg: Any, caller: String? = null) {
 		println(getMsgForLevel(msg, LogLevel.Warning, caller) ?: return)
 	}
@@ -75,6 +85,8 @@ class Logger internal constructor(
 			LogLevel.Error -> msg.wrapColor(ColorCodes.ANSI_RED)
 			LogLevel.Warning -> msg.wrapColor(ColorCodes.ANSI_YELLOW)
 			LogLevel.Info -> msg.wrapColor(ColorCodes.ANSI_WHITE)
+			LogLevel.InfoPositive -> msg.wrapColor(ColorCodes.ANSI_GREEN)
+			LogLevel.InfoNegative -> msg.wrapColor(ColorCodes.ANSI_GRAY)
 			LogLevel.Debug -> msg.wrapColor(ColorCodes.ANSI_CYAN)
 		}
 	}

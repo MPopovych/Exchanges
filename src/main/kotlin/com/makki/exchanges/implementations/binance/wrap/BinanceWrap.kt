@@ -49,7 +49,7 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 				}
 		}.mapRestError {
 			it.toSealedApiError()
-		}.mapHttpErrorToRestError {
+		}.tryMapHttpToRestError {
 			it.toSealedError()
 		}.also {
 			acceptResult(it)
@@ -71,7 +71,7 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 			binanceKlines.map { k -> binanceKlineToGeneric(k) }
 		}.mapRestError {
 			it.toSealedApiError()
-		}.mapHttpErrorToRestError {
+		}.tryMapHttpToRestError {
 			it.toSealedError()
 		}.also {
 			acceptResult(it)
