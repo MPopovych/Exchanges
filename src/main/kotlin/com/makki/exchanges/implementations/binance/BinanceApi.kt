@@ -1,9 +1,7 @@
 package com.makki.exchanges.implementations.binance
 
-import com.makki.exchanges.abtractions.Client
-import com.makki.exchanges.abtractions.RestApi
-import com.makki.exchanges.abtractions.RestResult
-import com.makki.exchanges.abtractions.defaultParse
+import com.makki.exchanges.abtractions.*
+import com.makki.exchanges.common.Result
 import com.makki.exchanges.implementations.BasicClient
 import com.makki.exchanges.implementations.binance.models.BinanceKline
 import com.makki.exchanges.implementations.binance.models.BinanceMarketInfo
@@ -17,7 +15,7 @@ class BinanceApi(private val httpClient: Client = BasicClient.builder().build())
 		const val BASE_URL = "https://api.binance.com"
 	}
 
-	suspend fun marketInfo(): RestResult<BinanceMarketInfo, BinanceError> {
+	suspend fun marketInfo(): Result<BinanceMarketInfo, RemoteCallError<BinanceError>> {
 		return publicApiGetMethod<BinanceMarketInfo>("api/v3/exchangeInfo", "")
 	}
 
@@ -27,7 +25,7 @@ class BinanceApi(private val httpClient: Client = BasicClient.builder().build())
 		limit: Int = 500,
 		startMs: Long,
 		endMs: Long,
-	): RestResult<List<BinanceKline>, BinanceError> {
+	): Result<List<BinanceKline>, RemoteCallError<BinanceError>> {
 		val cappedLimit = max(min(limit, 1000), 10)
 		val queryMap = mapOf(
 			"symbol" to market,
@@ -43,7 +41,7 @@ class BinanceApi(private val httpClient: Client = BasicClient.builder().build())
 		market: String,
 		interval: String,
 		limit: Int = 500,
-	): RestResult<List<BinanceKline>, BinanceError> {
+	): Result<List<BinanceKline>, RemoteCallError<BinanceError>> {
 		val cappedLimit = max(min(limit, 1000), 10)
 		val queryMap = mapOf(
 			"symbol" to market, "interval" to interval, "limit" to cappedLimit
@@ -55,7 +53,7 @@ class BinanceApi(private val httpClient: Client = BasicClient.builder().build())
 	private suspend inline fun <reified T : Any> publicApiGetMethod(
 		path: String,
 		query: String,
-	): RestResult<T, BinanceError> {
+	): Result<T, RemoteCallError<BinanceError>> {
 		val response = httpClient.get("${BASE_URL}/${path}?${query}")
 		return defaultParse(response)
 	}

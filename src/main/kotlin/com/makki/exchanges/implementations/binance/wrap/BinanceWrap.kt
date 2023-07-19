@@ -1,6 +1,10 @@
 package com.makki.exchanges.implementations.binance.wrap
 
-import com.makki.exchanges.abtractions.RestResult
+import com.makki.exchanges.abtractions.RemoteCallError
+import com.makki.exchanges.common.Result
+import com.makki.exchanges.common.mapError
+import com.makki.exchanges.common.mapOk
+import com.makki.exchanges.common.onError
 import com.makki.exchanges.implementations.binance.BinanceApi
 import com.makki.exchanges.implementations.binance.BinanceKlineSocket
 import com.makki.exchanges.implementations.binance.BinanceUtils
@@ -11,7 +15,10 @@ import com.makki.exchanges.tools.CachedStateSubject
 import com.makki.exchanges.tools.eqIgC
 import com.makki.exchanges.wrapper.*
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 
 /**
  * This wrapper defines supported features via traits
@@ -21,7 +28,7 @@ import kotlinx.coroutines.flow.*
 open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper, WrapTraitApiKline,
 	WrapTraitErrorStream, WrapTraitApiMarketInfo, WrapTraitSocketKline {
 
-	private val errorFlow = CachedStateSubject<RestResult<*, SealedApiError>>(BufferOverflow.DROP_OLDEST)
+	private val errorFlow = CachedStateSubject<SealedApiError>(BufferOverflow.DROP_OLDEST)
 	private val logger = defaultLogger()
 
 	private val binanceSocket = BinanceKlineSocket()
@@ -34,26 +41,23 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 			.map { k -> binanceKlineSocketToGeneric(k) }
 	}
 
-	override suspend fun trackErrors(): Flow<RestResult<*, SealedApiError>> {
+	override suspend fun trackErrors(): Flow<SealedApiError> {
 		return errorFlow.asSharedFlow()
 	}
 
-	override suspend fun marketInfo(): RestResult<List<MarketPair>, SealedApiError> {
+	override suspend fun marketInfo(): Result<List<MarketPair>, SealedApiError> {
 		val response = api.marketInfo()
 
-		return response.map { marketInfo ->
-			marketInfo.symbols
-				.filter { it.status == BinanceUtils.CONST_MARKET_TRADING }
-				.map {
-					binancePairToGeneric(it)
-				}
-		}.mapRestError {
-			it.toSealedApiError()
-		}.tryMapHttpToRestError {
-			it.toSealedError()
-		}.also {
-			acceptResult(it)
-		}
+		return response
+			.mapOk { marketInfo ->
+				marketInfo.symbols
+					.filter { it.status == BinanceUtils.CONST_MARKET_TRADING }
+					.map { pair ->
+						binancePairToGeneric(pair)
+					}
+			}
+			.mapError { rcError -> rcError.toSealedError() }
+			.onError { sealed -> notifyError(sealed) }
 	}
 
 	override suspend fun klineData(
@@ -61,43 +65,29 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 		interval: String,
 		limit: Int,
 		range: LongRange?,
-	): RestResult<List<KlineEntry>, SealedApiError> {
+	): Result<List<KlineEntry>, SealedApiError> {
 		val response = if (range != null) {
 			api.klineData(market, interval, limit, range.first, range.last)
 		} else {
 			api.klineData(market, interval, limit)
 		}
-		return response.map { binanceKlines ->
-			binanceKlines.map { k -> binanceKlineToGeneric(k) }
-		}.mapRestError {
-			it.toSealedApiError()
-		}.tryMapHttpToRestError {
-			it.toSealedError()
-		}.also {
-			acceptResult(it)
-		}
+		return response
+			.mapOk { binanceKlines ->
+				binanceKlines.map { k -> binanceKlineToGeneric(k) }
+			}
+			.mapError { rcError -> rcError.toSealedError() }
+			.onError { sealed -> notifyError(sealed) }
 	}
 
-	/**
-	 * Mapping from binance error to enum class
-	 */
-	protected open fun BinanceApi.BinanceError.toSealedApiError(): SealedApiError {
-		return toSealedApiErrorExt().also {
+	protected open fun RemoteCallError<BinanceApi.BinanceError>.toSealedError(): SealedApiError {
+		return this.toSealedApiErrorExt().also {
 			if (it is SealedApiError.Unexpected) {
 				logger.printError("Unhandled error $it from $this")
 			}
 		}
 	}
 
-	protected open fun RestResult.HttpError<*, *>.toSealedError(): SealedApiError? {
-		return toSealedErrorExt().also {
-			if (it is SealedApiError.Unexpected) {
-				logger.printError("Unhandled error $it from $this")
-			}
-		}
-	}
-
-	private fun acceptResult(result: RestResult<*, SealedApiError>) {
+	private fun notifyError(result: SealedApiError) {
 		errorFlow.tryEmit(result)
 	}
 

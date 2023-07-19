@@ -1,5 +1,7 @@
 package com.makki.exchanges.abtractions
 
+import com.makki.exchanges.common.Result
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
 interface RestApi {
@@ -19,28 +21,34 @@ interface RestApi {
 	}
 }
 
-inline fun <reified Ok : Any, reified Error : RestApi.ErrorValidator> RestApi.defaultParse(response: ClientResponse): RestResult<Ok, Error> {
+inline fun <reified Ok : Any, reified Error : RestApi.ErrorValidator> RestApi.defaultParse(
+	response: ClientResponse,
+): Result<Ok, RemoteCallError<Error>> {
+
 	val ok = when (response) {
-		is ClientResponse.Error -> return RestResult.ConnectionError(response.e)
+		is ClientResponse.ConnectionError -> return Result.Error(RemoteCallError.ConnectionError(response.e))
 		is ClientResponse.Ok -> response
 	}
 
 	if (!ok.httpCode.isOkHttpCode()) {
-		return RestResult.HttpError(ok.httpCode)
+		return Result.Error(RemoteCallError.HttpError(ok.httpCode))
 	}
 	try {
 		val error: Error = json.decodeFromString<Error>(ok.text)
+
+		// decoded, check if it's a fallback of empty fields or not (for example ignoreUnknown + default values)
 		if (error.isNotDefault()) {
-			return RestResult.RestError(error)
+			return Result.Error(RemoteCallError.ApiError(error))
 		}
-	} catch (_: Exception) {
+	} catch (e: SerializationException) {
+		// ignore failed parse, do not ignore invalid object
 	}
 
 	return try {
 		val decode: Ok = json.decodeFromString<Ok>(ok.text)
-		RestResult.Ok(decode)
-	} catch (e: Exception) {
-		RestResult.ParseError(e, ok.text)
+		Result.Ok(decode)
+	} catch (e: SerializationException) {
+		Result.Error(RemoteCallError.ParseError(e, ok.text))
 	}
 }
 

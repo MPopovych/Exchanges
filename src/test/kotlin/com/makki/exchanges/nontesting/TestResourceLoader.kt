@@ -1,4 +1,4 @@
-package com.makki.exchanges
+package com.makki.exchanges.nontesting
 
 object TestResourceLoader {
 	fun loadText(path: String): String {

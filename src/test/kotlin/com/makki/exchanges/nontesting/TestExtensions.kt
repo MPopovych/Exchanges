@@ -1,4 +1,4 @@
-package com.makki.exchanges
+package com.makki.exchanges.nontesting
 
 import com.makki.exchanges.logging.LogLevel
 import com.makki.exchanges.logging.loggerBuilder

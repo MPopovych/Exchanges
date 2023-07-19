@@ -1,4 +1,4 @@
-package com.makki.exchanges.implementations
+package com.makki.exchanges.nontesting
 
 import com.makki.exchanges.abtractions.Client
 import com.makki.exchanges.abtractions.ClientResponse

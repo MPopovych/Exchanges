@@ -1,10 +1,10 @@
 package com.makki.exchanges.implementations.binance.wrap
 
-import com.makki.exchanges.TestResourceLoader
+import com.makki.exchanges.nontesting.TestResourceLoader
 import com.makki.exchanges.abtractions.ClientResponse
-import com.makki.exchanges.asyncTest
-import com.makki.exchanges.asyncTestSecure
-import com.makki.exchanges.implementations.MockClient
+import com.makki.exchanges.nontesting.asyncTest
+import com.makki.exchanges.nontesting.asyncTestSecure
+import com.makki.exchanges.nontesting.MockClient
 import com.makki.exchanges.implementations.binance.BinanceApi
 import com.makki.exchanges.wrapper.SealedApiError
 import kotlin.test.Test
@@ -16,7 +16,7 @@ class BinanceWrapTest {
 		val response = BinanceWrap().marketInfo()
 		assert(response.isOk()) { response }
 
-		val marketInfo = response.unwrap()
+		val marketInfo = response.unwrapOk()
 		assert(!marketInfo.isNullOrEmpty())
 		println(marketInfo?.take(5))
 	}
@@ -26,7 +26,7 @@ class BinanceWrapTest {
 		val response = BinanceWrap().klineData("BTCUSDT", "15m", limit = 10)
 		assert(response.isOk()) { response.toString() }
 
-		val klineList = response.unwrap()
+		val klineList = response.unwrapOk()
 		assert(!klineList.isNullOrEmpty())
 		println(klineList?.take(5))
 	}
@@ -38,7 +38,7 @@ class BinanceWrapTest {
 		val mockedApi = BinanceApi(mockedClient)
 		val response = BinanceWrap(mockedApi).marketInfo()
 		assert(response.isOk())
-		val model = response.unwrap()
+		val model = response.unwrapOk()
 		assert(!model.isNullOrEmpty())
 		println(model?.take(3))
 	}
@@ -49,8 +49,8 @@ class BinanceWrapTest {
 		val mockedClient = MockClient { _ -> ClientResponse.Ok(200, errorJson, 0) }
 		val mockedApi = BinanceApi(mockedClient)
 		val response = BinanceWrap(mockedApi).klineData("BTCUSDT", "15m")
-		assert(response.isRestError())
-		val error = response.unwrapRestError()
+		assert(response.isError())
+		val error = response.unwrapError()
 		assert(error is SealedApiError.Banned)
 	}
 

@@ -1,7 +1,7 @@
 package com.makki.exchanges.implementations.binance
 
-import com.makki.exchanges.TestLogger
-import com.makki.exchanges.asyncTest
+import com.makki.exchanges.nontesting.TestLogger
+import com.makki.exchanges.nontesting.asyncTest
 import com.makki.exchanges.implementations.binance.models.BinanceKlineInterval
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.onEach

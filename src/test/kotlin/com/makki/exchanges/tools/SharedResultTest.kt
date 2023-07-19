@@ -1,6 +1,6 @@
 package com.makki.exchanges.tools
 
-import com.makki.exchanges.asyncTest
+import com.makki.exchanges.nontesting.asyncTest
 import kotlinx.coroutines.*
 import java.util.HashSet
 import kotlin.test.Test

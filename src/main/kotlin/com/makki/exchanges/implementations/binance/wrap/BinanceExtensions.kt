@@ -1,6 +1,6 @@
 package com.makki.exchanges.implementations.binance.wrap
 
-import com.makki.exchanges.abtractions.RestResult
+import com.makki.exchanges.abtractions.RemoteCallError
 import com.makki.exchanges.implementations.binance.BinanceApi
 import com.makki.exchanges.implementations.binance.models.BinanceKline
 import com.makki.exchanges.implementations.binance.models.BinanceMarketPair
@@ -59,6 +59,15 @@ internal fun binanceKlineToGeneric(k: BinanceKline): KlineEntry {
 	)
 }
 
+internal fun RemoteCallError<BinanceApi.BinanceError>.toSealedApiErrorExt(): SealedApiError {
+	return when (this) {
+		is RemoteCallError.ApiError -> this.error.toSealedApiErrorExt()
+		is RemoteCallError.HttpError -> this.toSealedErrorExt()
+		is RemoteCallError.ParseError -> SealedApiError.Unexpected(this.exception.stackTraceToString())
+		is RemoteCallError.ConnectionError -> SealedApiError.ConnectionError(this.exception.stackTraceToString())
+	}
+}
+
 /**
  * Mapping from binance error to enum class
  * TODO: Map onto described constants
@@ -96,14 +105,14 @@ internal fun BinanceApi.BinanceError.toSealedApiErrorExt(): SealedApiError {
 	return SealedApiError.Unexpected("Code: ${code}, msg: $msg")
 }
 
-internal fun RestResult.HttpError<*, *>.toSealedErrorExt(): SealedApiError? {
-	return when (code) {
+internal fun RemoteCallError.HttpError<*>.toSealedErrorExt(): SealedApiError {
+	return when (this.code) {
 		401 -> SealedApiError.InvalidAuth
 		// 418 is a binance iAmATeapot reserved for a temporary ban for days
 		418, 403 -> SealedApiError.Banned
 		500 -> SealedApiError.InternalExchangeError
 		502, 503, 504 -> SealedApiError.ExchangeIsOutOfService
 		429 -> SealedApiError.RateLimited
-		else -> null
+		else -> SealedApiError.Unexpected("Http error: ${this.code}")
 	}
 }

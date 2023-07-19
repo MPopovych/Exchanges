@@ -1,5 +1,18 @@
 package com.makki.exchanges.abtractions
 
+
+/**
+ * @param E - can be an expected api exception class
+ */
+sealed interface RemoteCallError<E> {
+	data class ApiError<E>(val error: E) : RemoteCallError<E>
+	data class HttpError<E>(val code: Int) : RemoteCallError<E>
+	data class ParseError<E>(val exception: Exception, val response: String) : RemoteCallError<E>
+	data class ConnectionError<E>(val exception: Exception) : RemoteCallError<E>
+}
+
+fun RemoteCallError.HttpError<*>.toEnum(): HttpCodeDescription = HttpCodeDescription.findError(code)
+
 sealed interface RestResult<T, E> {
 	data class Ok<T, E>(val data: T) : RestResult<T, E>
 
@@ -8,6 +21,7 @@ sealed interface RestResult<T, E> {
 	data class HttpError<T, E>(val code: Int) : Error<T, E> {
 		fun toEnum(): HttpCodeDescription = HttpCodeDescription.findError(code)
 	}
+
 	data class ParseError<T, E>(val exception: Exception, val json: String) : Error<T, E>
 	data class ConnectionError<T, E>(val exception: Exception) : Error<T, E>
 

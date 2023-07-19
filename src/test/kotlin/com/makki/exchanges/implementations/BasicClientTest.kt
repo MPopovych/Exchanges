@@ -1,7 +1,7 @@
 package com.makki.exchanges.implementations
 
 import com.makki.exchanges.abtractions.ClientResponse
-import com.makki.exchanges.asyncTest
+import com.makki.exchanges.nontesting.asyncTest
 import kotlin.test.Test
 
 class BasicClientTest {
@@ -11,7 +11,7 @@ class BasicClientTest {
 	@Test
 	fun testError() = asyncTest {
 		val response = basicClient.get("http://nonexstingwebpage.com/404")
-		assert(response is ClientResponse.Error)
+		assert(response is ClientResponse.ConnectionError)
 	}
 
 }

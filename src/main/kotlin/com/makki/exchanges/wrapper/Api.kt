@@ -2,6 +2,7 @@ package com.makki.exchanges.wrapper
 
 import com.makki.exchanges.abtractions.KlineInterval
 import com.makki.exchanges.abtractions.RestResult
+import com.makki.exchanges.common.Result
 import com.makki.exchanges.models.KlineEntry
 import com.makki.exchanges.models.MarketPair
 import kotlinx.coroutines.flow.Flow
@@ -22,7 +23,7 @@ interface ApiWrapper {
 }
 
 interface WrapTraitErrorStream {
-	suspend fun trackErrors(): Flow<RestResult<*, SealedApiError>>
+	suspend fun trackErrors(): Flow<SealedApiError>
 }
 
 interface WrapTraitApiKline {
@@ -31,11 +32,11 @@ interface WrapTraitApiKline {
 		interval: String,
 		limit: Int = 500,
 		range: LongRange? = null,
-	): RestResult<List<KlineEntry>, SealedApiError>
+	): Result<List<KlineEntry>, SealedApiError>
 }
 
 interface WrapTraitApiMarketInfo {
-	suspend fun marketInfo(): RestResult<List<MarketPair>, SealedApiError>
+	suspend fun marketInfo(): Result<List<MarketPair>, SealedApiError>
 }
 
 interface WrapTraitSocketKline {

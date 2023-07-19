@@ -11,5 +11,5 @@ sealed interface ClientResponse {
 		val time: Long,
 	) : ClientResponse
 
-	class Error(val e: Exception) : ClientResponse
+	class ConnectionError(val e: Exception) : ClientResponse
 }

@@ -26,7 +26,7 @@ open class BasicClient internal constructor(
 		val response: HttpResponse = try {
 			httpClient.get(urlString = url)
 		} catch (e: Exception) {
-			return ClientResponse.Error(e)
+			return ClientResponse.ConnectionError(e)
 		}
 		val text = response.bodyAsText()
 		val httpCode = response.status.value

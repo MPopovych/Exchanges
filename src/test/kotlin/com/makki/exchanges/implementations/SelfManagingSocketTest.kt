@@ -1,6 +1,6 @@
 package com.makki.exchanges.implementations
 
-import com.makki.exchanges.asyncTest
+import com.makki.exchanges.nontesting.asyncTest
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.Test
 
