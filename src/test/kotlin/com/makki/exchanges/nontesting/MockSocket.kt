@@ -1,6 +1,6 @@
 package com.makki.exchanges.nontesting
 
-import com.makki.exchanges.implementations.BasicSocket
+import com.makki.exchanges.abtractions.SocketApi
 import com.makki.exchanges.implementations.SocketFrame
 import com.makki.exchanges.implementations.SocketSession
 import com.makki.exchanges.tools.FreshOnlySubject
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.take
 class MockSocket(
 	private val intervalMs: Long = 500,
 	private val handler: suspend () -> String,
-) : BasicSocket() {
+) : SocketApi {
 	private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
 	override suspend fun connect(url: String, block: suspend SocketSession.() -> Unit) {

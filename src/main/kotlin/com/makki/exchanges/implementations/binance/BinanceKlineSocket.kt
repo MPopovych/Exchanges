@@ -1,5 +1,6 @@
 package com.makki.exchanges.implementations.binance
 
+import com.makki.exchanges.abtractions.Frame
 import com.makki.exchanges.abtractions.JsonParser
 import com.makki.exchanges.abtractions.KlineInterval
 import com.makki.exchanges.implementations.SelfManagingSocket
@@ -18,14 +19,22 @@ class BinanceKlineSocket(socket: SelfManagingSocket? = null) {
 	private val json = JsonParser.default
 
 	private val socket = socket ?: (SelfManagingSocket
-		.builder("BinanceKlineSocket")
+		.builder("BinanceKline")
 		.url("wss://stream.binance.com:9443/ws/stream")
 		.onConnectionOpen {
+			subject.emit(Frame.Connect())
 			this.send(getSubscriptionMessages())
 		}
-		.onTextMsg { parse(it) }.build())
+		.onTextMsg { parse(it) }
+		.onConnectionClosed {
+			subject.emit(Frame.Disconnect())
+		}
+		.onConnectionRejected {
+			subject.emit(Frame.Disconnect())
+		}
+		.build())
 
-	private val subject = CachedStateSubject<BinanceSocketKlineAsset>(overflow = BufferOverflow.DROP_OLDEST)
+	private val subject = CachedStateSubject<Frame<BinanceSocketKlineAsset>>(overflow = BufferOverflow.DROP_OLDEST)
 
 	fun observe() = subject.asSharedFlow()
 
@@ -76,7 +85,7 @@ class BinanceKlineSocket(socket: SelfManagingSocket? = null) {
 			}
 			return
 		}
-		subject.emit(kline.k)
+		subject.emit(Frame.Asset(kline.k))
 	}
 
 	private fun getSubscriptionMessages(): String {
@@ -115,6 +124,7 @@ class BinanceKlineSocket(socket: SelfManagingSocket? = null) {
 				return Subscription(market.lowercase(), interval.lowercase())
 			}
 		}
+
 		fun toStream(): String {
 			return "\"${market}@kline_${interval}\""
 		}

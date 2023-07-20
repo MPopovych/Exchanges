@@ -78,7 +78,7 @@ inline fun <T, E, N> Result<T, E>.mapError(block: (E) -> N): Result<T, N> {
 	}
 }
 
-inline fun <T, E> Result<T, E>.flatMapResult(block: (T) -> Result<T, E>): Result<T, E> {
+inline fun <C, T, E> Result<T, E>.flatMapResult(block: (T) -> Result<C, E>): Result<C, E> {
 	return when (this) {
 		is Result.Error -> Result.Error(this.error)
 		is Result.Ok -> {
@@ -147,7 +147,7 @@ fun <C> Result<C, C>.toCommon(): C {
 	}
 }
 
-fun <T, C, I: C, E: C> Result<Result<T, I>, E>.flattenToCommon(): Result<T, C> {
+fun <T, C, I : C, E : C> Result<Result<T, I>, E>.flattenToCommon(): Result<T, C> {
 	return when (this) {
 		is Result.Error -> Result.Error(this.error)
 		is Result.Ok -> when (val inner = this.data) {
@@ -161,11 +161,28 @@ fun <T, C, I: C, E: C> Result<Result<T, I>, E>.flattenToCommon(): Result<T, C> {
  * Exceptions
  */
 
+fun <N, T> Result<T, Exception>.mapAndCatch(block: (T) -> N): Result<N, Exception> {
+	return this.flatMapResult {
+		try {
+			return@flatMapResult Result.Ok(block(it))
+		} catch (e: Exception) {
+			return@flatMapResult Result.Error(e)
+		}
+	}
+}
+
 fun <T, E : Exception> Result<T, E>.unwrapOrThrowInner(): T {
 	when (this) {
 		is Result.Error -> throw this.error
 		is Result.Ok -> return this.data
 	}
+}
+
+fun <T, E : Exception> Result<T, E>.throwInnerIfError(): Nothing? {
+	if (this is Result.Error) {
+		throw this.error
+	}
+	return null
 }
 
 // endregion

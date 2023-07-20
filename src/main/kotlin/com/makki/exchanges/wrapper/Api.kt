@@ -1,5 +1,6 @@
 package com.makki.exchanges.wrapper
 
+import com.makki.exchanges.abtractions.Frame
 import com.makki.exchanges.abtractions.KlineInterval
 import com.makki.exchanges.abtractions.RestResult
 import com.makki.exchanges.common.Result
@@ -22,6 +23,10 @@ interface ApiWrapper {
 	fun readApiName(marketPair: MarketPair): String
 }
 
+interface WSWrapper {
+	fun readWSName(marketPair: MarketPair): String
+}
+
 interface WrapTraitErrorStream {
 	suspend fun trackErrors(): Flow<SealedApiError>
 }
@@ -39,16 +44,16 @@ interface WrapTraitApiMarketInfo {
 	suspend fun marketInfo(): Result<List<MarketPair>, SealedApiError>
 }
 
-interface WrapTraitSocketKline {
+interface WrapTraitSocketKline: WSWrapper {
 	suspend fun trackKline(
 		market: String,
 		interval: String,
-	): Flow<KlineEntry>
+	): Flow<Frame<KlineEntry>>
 
 	suspend fun trackKline(
 		market: String,
 		interval: KlineInterval,
-	): Flow<KlineEntry> = trackKline(market, interval.apiCode)
+	): Flow<Frame<KlineEntry>> = trackKline(market, interval.apiCode)
 }
 
 // region casts
@@ -56,6 +61,11 @@ interface WrapTraitSocketKline {
 @Throws
 fun ApiWrapper.requireKlineApi(): WrapTraitApiKline {
 	return this as? WrapTraitApiKline ?: throw NotImplementedError("Failed requirement for Kline api")
+}
+
+@Throws
+fun ApiWrapper.requireKlineWS(): WrapTraitSocketKline {
+	return this as? WrapTraitSocketKline ?: throw NotImplementedError("Failed requirement for Kline ws")
 }
 
 // endregion

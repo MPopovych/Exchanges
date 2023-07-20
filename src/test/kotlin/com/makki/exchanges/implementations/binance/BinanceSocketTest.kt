@@ -1,9 +1,10 @@
 package com.makki.exchanges.implementations.binance
 
+import com.makki.exchanges.implementations.binance.models.BinanceKlineInterval
 import com.makki.exchanges.nontesting.TestLogger
 import com.makki.exchanges.nontesting.asyncTest
-import com.makki.exchanges.implementations.binance.models.BinanceKlineInterval
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -23,9 +24,11 @@ class BinanceSocketTest {
 		socket.addMarket("ethusdt", BinanceKlineInterval.Minutes15)
 
 		val list = withTimeout(10000) {
-			return@withTimeout socket.observe().onEach {
-				TestLogger.logger.printDebug(it)
-			}.take(validCount).toList()
+			return@withTimeout socket.observe()
+				.mapNotNull { it.unwrapAsset() }
+				.onEach {
+					TestLogger.logger.printDebug(it)
+				}.take(validCount).toList()
 		}
 		assert(list.isNotEmpty() && list.size >= validCount)
 		socket.stop()

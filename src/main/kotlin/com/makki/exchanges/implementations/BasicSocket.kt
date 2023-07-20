@@ -7,14 +7,28 @@ import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.isActive
+import java.util.concurrent.TimeUnit
 
-open class BasicSocket : SocketApi {
+open class BasicSocket(
+	private val connectTimeoutMs: Long = 5000,
+	private val pingIntervalMs: Long = 15000,
+) : SocketApi {
+
+	init {
+		// unsafe otherwise
+		require(connectTimeoutMs > 0 && connectTimeoutMs < TimeUnit.MINUTES.toMillis(1))
+		require(pingIntervalMs > 2000 && pingIntervalMs < TimeUnit.MINUTES.toMillis(1))
+	}
+
 	private val socket = HttpClient(CIO) {
 		engine {
-			requestTimeout = 5000
+			this.requestTimeout = connectTimeoutMs
 		}
-		install(WebSockets)
+		install(WebSockets) {
+			this.pingInterval = pingIntervalMs
+		}
 	}
 
 	override suspend fun connect(url: String, block: suspend SocketSession.() -> Unit) {
@@ -39,12 +53,17 @@ sealed interface SocketFrame {
 	class Text(val data: String) : SocketFrame
 	class Binary(val data: ByteArray) : SocketFrame
 	class Close(val reason: String) : SocketFrame
-	object Unknown : SocketFrame
+	data object Unknown : SocketFrame
 }
 
 class BasicSocketSession(private val ktorSession: DefaultClientWebSocketSession) : SocketSession {
 	override suspend fun receive(): SocketFrame {
-		return when (val msg = ktorSession.incoming.receive()) {
+		val msg = try {
+			ktorSession.incoming.receive()
+		} catch (e: ClosedReceiveChannelException) {
+			return SocketFrame.Close(e.message ?: "ClosedReceiveChannelException")
+		}
+		return when (msg) {
 			is Frame.Binary -> SocketFrame.Binary(msg.readBytes())
 			is Frame.Close -> SocketFrame.Close(msg.readReason()?.message ?: "Unknown")
 			is Frame.Text -> SocketFrame.Text(msg.readText())
@@ -67,6 +86,4 @@ class BasicSocketSession(private val ktorSession: DefaultClientWebSocketSession)
 	override fun isActive(): Boolean {
 		return ktorSession.isActive
 	}
-
-
 }

@@ -1,5 +1,6 @@
 package com.makki.exchanges.implementations.binance.wrap
 
+import com.makki.exchanges.abtractions.Frame
 import com.makki.exchanges.abtractions.RemoteCallError
 import com.makki.exchanges.common.Result
 import com.makki.exchanges.common.mapError
@@ -33,12 +34,18 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 
 	private val binanceSocket = BinanceKlineSocket()
 
-	override suspend fun trackKline(market: String, interval: String): Flow<KlineEntry> {
+	override fun start() {
+		binanceSocket.start()
+	}
+
+	override suspend fun trackKline(market: String, interval: String): Flow<Frame<KlineEntry>> {
 		binanceSocket.addMarket(market, interval) // checks internally for an existing one
 
+		binanceSocket.start()
+
 		return binanceSocket.observe()
-			.filter { it.market.eqIgC(market) }
-			.map { k -> binanceKlineSocketToGeneric(k) }
+			.filter { it.check(true) { k -> k.market.eqIgC(market) } }
+			.map { f -> f.mapAsset { k -> binanceKlineSocketToGeneric(k) } }
 	}
 
 	override suspend fun trackErrors(): Flow<SealedApiError> {
@@ -52,9 +59,7 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 			.mapOk { marketInfo ->
 				marketInfo.symbols
 					.filter { it.status == BinanceUtils.CONST_MARKET_TRADING }
-					.map { pair ->
-						binancePairToGeneric(pair)
-					}
+					.map { pair -> binancePairToGeneric(pair) }
 			}
 			.mapError { rcError -> rcError.toSealedError() }
 			.onError { sealed -> notifyError(sealed) }
@@ -92,6 +97,10 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 	}
 
 	override fun readApiName(marketPair: MarketPair): String {
+		return BinanceUtils.getApiMarketName(marketPair)
+	}
+
+	override fun readWSName(marketPair: MarketPair): String {
 		return BinanceUtils.getApiMarketName(marketPair)
 	}
 

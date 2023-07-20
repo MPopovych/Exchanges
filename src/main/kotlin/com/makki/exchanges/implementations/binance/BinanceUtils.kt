@@ -10,4 +10,8 @@ object BinanceUtils : ExchangeUtil {
 		return "${base.uppercase()}${quote.uppercase()}"
 	}
 
+	override fun getWSMarketName(base: String, quote: String): String {
+		return "${base.lowercase()}${quote.lowercase()}"
+	}
+
 }

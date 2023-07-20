@@ -10,4 +10,8 @@ interface ExchangeUtil {
 	fun getApiMarketName(marketPair: MarketPair): String {
 		return getApiMarketName(marketPair.base, marketPair.quote)
 	}
+	fun getWSMarketName(base: String, quote: String): String
+	fun getWSMarketName(marketPair: MarketPair): String {
+		return getWSMarketName(marketPair.base, marketPair.quote)
+	}
 }

@@ -41,6 +41,12 @@ class Logger internal constructor(
 
 	private val formatter = DateTimeFormatter.ofPattern(timePattern)
 
+	fun printDebug(caller: String? = null, msg: () -> Any) {
+		if (LogLevel.Debug.priority > logLevel.priority) return
+
+		println(getMsgForLevel(msg(), LogLevel.Debug, caller) ?: return)
+	}
+
 	fun printDebug(msg: Any, caller: String? = null) {
 		println(getMsgForLevel(msg, LogLevel.Debug, caller) ?: return)
 	}
