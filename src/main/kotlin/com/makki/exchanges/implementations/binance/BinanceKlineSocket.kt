@@ -6,15 +6,17 @@ import com.makki.exchanges.abtractions.KlineInterval
 import com.makki.exchanges.implementations.SelfManagingSocket
 import com.makki.exchanges.implementations.binance.models.BinanceSocketKlineAsset
 import com.makki.exchanges.implementations.binance.models.BinanceSocketKlineMsg
-import com.makki.exchanges.logging.defaultLogger
+import com.makki.exchanges.logging.LogLevel
+import com.makki.exchanges.logging.loggerBuilder
 import com.makki.exchanges.tools.CachedStateSubject
+import com.makki.exchanges.tools.ellipsis
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.util.concurrent.CopyOnWriteArraySet
 
 class BinanceKlineSocket(socket: SelfManagingSocket? = null) {
 
-	private val logger = defaultLogger()
+	private val logger = loggerBuilder().level(LogLevel.Info).build()
 	private val marketList = CopyOnWriteArraySet<Subscription>()
 	private val json = JsonParser.default
 
@@ -23,7 +25,9 @@ class BinanceKlineSocket(socket: SelfManagingSocket? = null) {
 		.url("wss://stream.binance.com:9443/ws/stream")
 		.onConnectionOpen {
 			subject.emit(Frame.Connect())
-			this.send(getSubscriptionMessages())
+			this.send(getSubscriptionMessages().also {
+				logger.printDebug { "sending sub: ${it.replace("\n", " ")}" }
+			})
 		}
 		.onTextMsg { parse(it) }
 		.onConnectionClosed {
@@ -59,6 +63,7 @@ class BinanceKlineSocket(socket: SelfManagingSocket? = null) {
 
 		marketList.add(subscription)
 		val subMsg = wrapAddStreams(subscription.toStream())
+		logger.printDebug { "sending sub: ${subMsg.replace("\n", " ")}" }
 		socket.send(subMsg)
 	}
 
@@ -70,13 +75,15 @@ class BinanceKlineSocket(socket: SelfManagingSocket? = null) {
 		if (subscription !in marketList) return
 
 		marketList.remove(subscription)
-		val subMsg = wrapRemoveStreams(subscription.toStream())
-		socket.send(subMsg)
+		val unsubMsg = wrapRemoveStreams(subscription.toStream())
+		logger.printDebug { "sending unsub: ${unsubMsg.replace("\n", " ")}" }
+		socket.send(unsubMsg)
 	}
 
 	suspend fun addMarket(market: String, interval: KlineInterval) = addMarket(market, interval.apiCode)
 
 	private suspend fun parse(msg: String) {
+		logger.printDebug("msg: ${msg.replace("\n", "").ellipsis(130)}")
 		val kline: BinanceSocketKlineMsg = try {
 			json.decodeFromString<BinanceSocketKlineMsg>(msg)
 		} catch (e: Exception) {

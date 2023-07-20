@@ -9,73 +9,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 
-class SocketBuilder(private val name: String) {
-	private var urlProducer: (() -> String)? = null
-	private var basicSocket: SocketApi? = null
-	private var onConnectionOpen: (suspend SocketControl.() -> Unit)? = null
-	private var onConnectionClosed: (suspend SocketControl.() -> Unit)? = null
-	private var onConnectionRejected: (suspend SocketControl.() -> Unit)? = null
-	private var onSocketStop: (suspend (SelfManagingSocket) -> Unit)? = null
-	private var binaryBlock: (suspend SocketControl.(ByteArray) -> Unit)? = null
-	private var textBlock: (suspend SocketControl.(String) -> Unit)? = null
-
-	fun url(url: String) = this.also {
-		urlProducer = { url }
-	}
-
-	fun url(url: () -> String) = this.also {
-		urlProducer = url
-	}
-
-	fun socket(socket: SocketApi) = this.also {
-		basicSocket = socket
-	}
-
-	fun onConnectionOpen(onOpen: (suspend SocketControl.() -> Unit)) = this.also {
-		onConnectionOpen = onOpen
-	}
-
-	fun onConnectionClosed(onClose: (suspend SocketControl.() -> Unit)) = this.also {
-		onConnectionClosed = onClose
-	}
-
-	fun onConnectionRejected(onReject: (suspend SocketControl.() -> Unit)) = this.also {
-		onConnectionRejected = onReject
-	}
-
-	fun onSocketStop(onStop: (suspend (SelfManagingSocket) -> Unit)) = this.also {
-		onSocketStop = onStop
-	}
-
-	fun onBinaryMsg(block: (suspend SocketControl.(ByteArray) -> Unit)) = this.also {
-		binaryBlock = block
-	}
-
-	fun onTextMsg(block: (suspend SocketControl.(String) -> Unit)) = this.also {
-		textBlock = block
-	}
-
-	fun build(): SelfManagingSocket {
-		require(textBlock != null)
-		require(urlProducer != null)
-		val url = urlProducer ?: throw IllegalArgumentException("Url is missing")
-		val block = textBlock ?: throw IllegalArgumentException("Msg handle is missing")
-		val socket = basicSocket ?: BasicSocket()
-
-		return SelfManagingSocket(
-			name,
-			socket,
-			url,
-			onConnectionOpen,
-			onConnectionClosed,
-			onConnectionRejected,
-			onSocketStop,
-			binaryBlock,
-			block
-		)
-	}
-}
-
 class SelfManagingSocket(
 	private val name: String,
 	private val socket: SocketApi,
@@ -183,7 +116,10 @@ class SelfManagingSocket(
 					break
 				}
 
-				else -> continue
+				else -> {
+					logger.printDebug { "sending sub: ${msg.toString().replace("\n", " ")}" }
+					continue
+				}
 			}
 		}
 	}
@@ -200,3 +136,69 @@ interface SocketControl {
 	suspend fun send(msg: ByteArray): Boolean
 }
 
+class SocketBuilder(private val name: String) {
+	private var urlProducer: (() -> String)? = null
+	private var basicSocket: SocketApi? = null
+	private var onConnectionOpen: (suspend SocketControl.() -> Unit)? = null
+	private var onConnectionClosed: (suspend SocketControl.() -> Unit)? = null
+	private var onConnectionRejected: (suspend SocketControl.() -> Unit)? = null
+	private var onSocketStop: (suspend (SelfManagingSocket) -> Unit)? = null
+	private var binaryBlock: (suspend SocketControl.(ByteArray) -> Unit)? = null
+	private var textBlock: (suspend SocketControl.(String) -> Unit)? = null
+
+	fun url(url: String) = this.also {
+		urlProducer = { url }
+	}
+
+	fun url(url: () -> String) = this.also {
+		urlProducer = url
+	}
+
+	fun socket(socket: SocketApi) = this.also {
+		basicSocket = socket
+	}
+
+	fun onConnectionOpen(onOpen: (suspend SocketControl.() -> Unit)) = this.also {
+		onConnectionOpen = onOpen
+	}
+
+	fun onConnectionClosed(onClose: (suspend SocketControl.() -> Unit)) = this.also {
+		onConnectionClosed = onClose
+	}
+
+	fun onConnectionRejected(onReject: (suspend SocketControl.() -> Unit)) = this.also {
+		onConnectionRejected = onReject
+	}
+
+	fun onSocketStop(onStop: (suspend (SelfManagingSocket) -> Unit)) = this.also {
+		onSocketStop = onStop
+	}
+
+	fun onBinaryMsg(block: (suspend SocketControl.(ByteArray) -> Unit)) = this.also {
+		binaryBlock = block
+	}
+
+	fun onTextMsg(block: (suspend SocketControl.(String) -> Unit)) = this.also {
+		textBlock = block
+	}
+
+	fun build(): SelfManagingSocket {
+		require(textBlock != null)
+		require(urlProducer != null)
+		val url = urlProducer ?: throw IllegalArgumentException("Url is missing")
+		val block = textBlock ?: throw IllegalArgumentException("Msg handle is missing")
+		val socket = basicSocket ?: BasicSocket()
+
+		return SelfManagingSocket(
+			name,
+			socket,
+			url,
+			onConnectionOpen,
+			onConnectionClosed,
+			onConnectionRejected,
+			onSocketStop,
+			binaryBlock,
+			block
+		)
+	}
+}

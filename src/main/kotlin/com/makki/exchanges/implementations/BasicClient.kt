@@ -3,22 +3,28 @@ package com.makki.exchanges.implementations
 import com.makki.exchanges.abtractions.ClientResponse
 import com.makki.exchanges.abtractions.Client
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import okhttp3.OkHttpClient
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 open class BasicClient internal constructor(
-	timeout: Long,
+	connectTimeoutMs: Long,
 ) : Client {
 
 	companion object {
 		fun builder() = ClientBuilder()
 	}
 
-	private val httpClient = HttpClient(CIO) {
+	private val httpClient = HttpClient(OkHttp) {
 		engine {
-			requestTimeout = timeout
+			this.preconfigured = OkHttpClient.Builder()
+				.callTimeout(Duration.ofMillis(connectTimeoutMs))
+				.readTimeout(Duration.ofMillis(connectTimeoutMs))
+				.writeTimeout(Duration.ofMillis(connectTimeoutMs))
+				.build()
 		}
 	}
 
@@ -44,6 +50,6 @@ class ClientBuilder {
 	}
 
 	fun build(): BasicClient {
-		return BasicClient(timeout = timeout)
+		return BasicClient(connectTimeoutMs = timeout)
 	}
 }

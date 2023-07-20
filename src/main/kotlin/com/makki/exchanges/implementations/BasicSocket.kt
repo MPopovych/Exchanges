@@ -2,13 +2,15 @@ package com.makki.exchanges.implementations
 
 import com.makki.exchanges.abtractions.SocketApi
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.isActive
+import okhttp3.OkHttpClient
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 open class BasicSocket(
@@ -22,9 +24,14 @@ open class BasicSocket(
 		require(pingIntervalMs > 2000 && pingIntervalMs < TimeUnit.MINUTES.toMillis(1))
 	}
 
-	private val socket = HttpClient(CIO) {
+	private val socket = HttpClient(OkHttp) {
 		engine {
-			this.requestTimeout = connectTimeoutMs
+			this.preconfigured = OkHttpClient.Builder()
+				.callTimeout(Duration.ofMillis(connectTimeoutMs))
+				.readTimeout(Duration.ofMillis(connectTimeoutMs))
+				.writeTimeout(Duration.ofMillis(connectTimeoutMs))
+				.pingInterval(Duration.ofMillis(pingIntervalMs))
+				.build()
 		}
 		install(WebSockets) {
 			this.pingInterval = pingIntervalMs
@@ -53,7 +60,7 @@ sealed interface SocketFrame {
 	class Text(val data: String) : SocketFrame
 	class Binary(val data: ByteArray) : SocketFrame
 	class Close(val reason: String) : SocketFrame
-	data object Unknown : SocketFrame
+	data object PingPong : SocketFrame
 }
 
 class BasicSocketSession(private val ktorSession: DefaultClientWebSocketSession) : SocketSession {
@@ -67,7 +74,7 @@ class BasicSocketSession(private val ktorSession: DefaultClientWebSocketSession)
 			is Frame.Binary -> SocketFrame.Binary(msg.readBytes())
 			is Frame.Close -> SocketFrame.Close(msg.readReason()?.message ?: "Unknown")
 			is Frame.Text -> SocketFrame.Text(msg.readText())
-			else -> SocketFrame.Unknown
+			else -> SocketFrame.PingPong
 		}
 	}
 
