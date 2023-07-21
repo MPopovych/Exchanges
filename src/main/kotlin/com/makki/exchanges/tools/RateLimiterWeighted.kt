@@ -6,7 +6,7 @@ import kotlinx.coroutines.sync.withLock
 import java.util.LinkedList
 
 /**
- * Pure throughput on M1 mac is around ±15648826 ops/sec
+ * Pure throughput on M1 mac is around 15_648_826 ±50% (depending on limit) ops/sec
  * Which should not be a heavy load compared to weight of http requests and risks of ddos
  */
 class RateLimiterWeighted(
@@ -15,7 +15,7 @@ class RateLimiterWeighted(
 ) {
 
 	private val active = weightLimit > 0
-	private val accounting = LinkedList<Pair<Long, Float>>()
+	private val accounting = ArrayList<Pair<Long, Float>>()
 	private val accountMutex = Mutex()
 
 	/**
