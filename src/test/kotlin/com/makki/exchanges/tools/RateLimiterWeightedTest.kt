@@ -16,7 +16,7 @@ class RateLimiterWeightedTest {
 		var passCount = 0
 		var rejected = 0
 		while (System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(1) < start) {
-			val r = limiter.tryRun(1f) {
+			val r = limiter.tryRun(0.1f) {
 				// doing Nothing
 				val t = 2 + 2
 				t.toShort()
@@ -28,12 +28,12 @@ class RateLimiterWeightedTest {
 			}
 		}
 		TestLogger.logger.printDebug("passCount: $passCount, rejected: $rejected")
-		assert(passCount in 95..105) { "passCount: $passCount" }
+		assert(passCount in 995..1005) { "passCount: $passCount" }
 	}
 
 	@Test
 	fun testRejections() = asyncTest {
-		val limiter = RateLimiterWeighted(100, 1f)
+		val limiter = RateLimiterWeighted(100, 3f)
 		val start = System.currentTimeMillis()
 		var passCount = 0
 		var rejected = 0
@@ -50,7 +50,7 @@ class RateLimiterWeightedTest {
 			}
 		}
 		TestLogger.logger.printDebug("passCount: $passCount, rejected: $rejected")
-		assert(passCount in 9..11) { "PassCount: $passCount" }
+		assert(passCount in 29..31) { "PassCount: $passCount" }
 	}
 
 	@Test

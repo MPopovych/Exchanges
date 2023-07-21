@@ -1,12 +1,10 @@
 package com.makki.exchanges.tools
 
 import com.makki.exchanges.common.Result
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import java.util.LinkedList
 
 /**
- * Pure throughput on M1 mac is around 15_648_826 ±50% (depending on limit) ops/sec
+ * Pure throughput on M1 mac is around 16_500_000 ±20% (for 3 lock) ops/sec
+ * ~5333858 ops/sec for 100 locks
  * Which should not be a heavy load compared to weight of http requests and risks of ddos
  */
 class RateLimiterWeighted(
@@ -16,7 +14,6 @@ class RateLimiterWeighted(
 
 	private val active = weightLimit > 0
 	private val accounting = ArrayList<Pair<Long, Float>>()
-	private val accountMutex = Mutex()
 
 	/**
 	 * Used for requests eligible for rate-limiting
@@ -30,7 +27,7 @@ class RateLimiterWeighted(
 		return if (countAndClearAccount() >= weightLimit) {
 			Result.Error(Rejection)
 		} else {
-			addAccount(weight)
+			accountFor(weight)
 			Result.Ok(block())
 		}
 	}
@@ -43,16 +40,18 @@ class RateLimiterWeighted(
 		require(weight >= 0)
 		// add weight to current window
 		if (active) {
-			addAccount(weight)
+			accountFor(weight)
 		}
 		return block()
 	}
 
-	private suspend fun addAccount(weight: Float) = accountMutex.withLock {
+	@Synchronized
+	private fun accountFor(weight: Float) {
 		accounting.add(Pair(System.currentTimeMillis(), weight))
 	}
 
-	private suspend fun countAndClearAccount(): Float = accountMutex.withLock {
+	@Synchronized
+	private fun countAndClearAccount(): Float {
 		var sum = 0f
 		val now = System.currentTimeMillis()
 		val iterator = accounting.iterator()
@@ -64,7 +63,7 @@ class RateLimiterWeighted(
 				sum += next.second
 			}
 		}
-		return@withLock sum
+		return sum
 	}
 
 
