@@ -12,7 +12,7 @@ sealed interface SealedApiError {
 	 * Recommended way to handle - log + recovery + crash if involves trading
 	 */
 	data class Unexpected(val description: String) : SealedApiError, ErrorTags.ShouldNotify
-	data class ConnectionError(val description: String): SealedApiError
+	data class ConnectionError(val description: String) : SealedApiError
 
 	data object SafeguardBlock : SealedApiError
 
@@ -28,7 +28,7 @@ sealed interface SealedApiError {
 	data object ExchangeIsOutOfService : SealedApiError, ErrorTags.Temporary
 	data object MarketBlocked : SealedApiError, ErrorTags.Temporary
 
-	data object PersistingHttpException: SealedApiError, ErrorTags.Persisting
+	data object PersistingHttpException : SealedApiError, ErrorTags.Persisting
 
 	sealed interface Order : SealedApiError {
 		data object ArgumentFail : Order, ErrorTags.ShouldNotify

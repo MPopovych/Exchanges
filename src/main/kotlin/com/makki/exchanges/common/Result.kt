@@ -178,7 +178,7 @@ fun <T, E : Exception> Result<T, E>.unwrapOrThrowInner(): T {
 	}
 }
 
-fun <T, E : Exception> Result<T, E>.throwInnerIfError(): Nothing? {
+fun <T, E : Exception> Result<T, E>.throwInnerIfError(): Result<T, E>? {
 	if (this is Result.Error) {
 		throw this.error
 	}

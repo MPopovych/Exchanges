@@ -19,7 +19,7 @@ class BinanceMarketPair(
 	@SerialName("isSpotTradingAllowed")
 	val spotAllowed: Boolean,
 	val orderTypes: List<String>,
-	val filters: List<BinanceMarketPairFilter>
+	val filters: List<BinanceMarketPairFilter>,
 )
 
 @Serializable(with = BinanceFilterSerializer::class)

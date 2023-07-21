@@ -1,7 +1,7 @@
 package com.makki.exchanges.implementations
 
-import com.makki.exchanges.abtractions.ClientResponse
 import com.makki.exchanges.abtractions.Client
+import com.makki.exchanges.abtractions.ClientResponse
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*

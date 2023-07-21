@@ -2,7 +2,6 @@ package com.makki.exchanges.wrapper
 
 import com.makki.exchanges.abtractions.Frame
 import com.makki.exchanges.abtractions.KlineInterval
-import com.makki.exchanges.abtractions.RestResult
 import com.makki.exchanges.common.Result
 import com.makki.exchanges.models.KlineEntry
 import com.makki.exchanges.models.MarketPair
@@ -44,7 +43,7 @@ interface WrapTraitApiMarketInfo {
 	suspend fun marketInfo(): Result<List<MarketPair>, SealedApiError>
 }
 
-interface WrapTraitSocketKline: WSWrapper {
+interface WrapTraitSocketKline : WSWrapper {
 	suspend fun trackKline(
 		market: String,
 		interval: String,
