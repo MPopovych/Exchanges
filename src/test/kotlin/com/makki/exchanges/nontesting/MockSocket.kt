@@ -33,9 +33,9 @@ class MockSession(private val job: Job, private val readFlow: SharedFlow<String>
 		return SocketFrame.Text(readFlow.take(1).single())
 	}
 
-	override suspend fun send(text: String) {}
+	override suspend fun send(text: String) = true
 
-	override suspend fun send(byteArray: ByteArray) {}
+	override suspend fun send(byteArray: ByteArray) = true
 
 	override fun cancel(e: CancellationException?) {
 		job.cancel(e)

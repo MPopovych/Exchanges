@@ -4,7 +4,7 @@ import com.makki.exchanges.common.Result
 
 /**
  * Pure throughput on M1 mac is around 16_500_000 ±20% (for 3 lock) ops/sec
- * ~5333858 ops/sec for 100 locks
+ * ~5_333_858 ops/sec for 100 locks
  * Which should not be a heavy load compared to weight of http requests and risks of ddos
  */
 class RateLimiterWeighted(
@@ -20,8 +20,6 @@ class RateLimiterWeighted(
 	 * Ex.: a balance refresh or checking the state of an order
 	 */
 	suspend fun <T> tryRun(weight: Float, block: suspend () -> T): Result<T, Rejection> {
-		require(weight >= 0)
-
 		if (!active) return Result.Ok(block())
 
 		return if (countAndClearAccount() >= weightLimit) {
@@ -37,7 +35,6 @@ class RateLimiterWeighted(
 	 * Ex.: an urgent cancel order
 	 */
 	suspend fun <T> forceRun(weight: Float, block: suspend () -> T): T {
-		require(weight >= 0)
 		// add weight to current window
 		if (active) {
 			accountFor(weight)

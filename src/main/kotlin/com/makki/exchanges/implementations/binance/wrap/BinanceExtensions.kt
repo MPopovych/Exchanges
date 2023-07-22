@@ -79,11 +79,8 @@ internal fun BinanceApi.BinanceError.toSealedApiErrorExt(): SealedApiError {
 		-1001 -> SealedApiError.ExchangeIsOutOfService
 		-1015 -> SealedApiError.RateLimited
 		-1021 -> SealedApiError.NonceRaceCondition
-
 		-1109 -> SealedApiError.Banned
-
 		-1108, -1110, -1121, -4141 -> SealedApiError.MarketBlocked
-
 		-2013 -> SealedApiError.Order.OrderNotFound
 		-2018 -> SealedApiError.Order.InsufficientBalance
 		-2020 -> SealedApiError.Order.PriceFillMiss
@@ -94,7 +91,7 @@ internal fun BinanceApi.BinanceError.toSealedApiErrorExt(): SealedApiError {
 	val byMsg = when {
 		msg.inIgC("Invalid API-key, IP, or permissions for action") -> SealedApiError.InvalidAuth
 		msg.inIgC("LOT_SIZE") || msg.inIgC("MIN_NOTIONAL") || msg.inIgC("Invalid quantity") -> {
-			SealedApiError.Order.InsufficientBalance
+			SealedApiError.Order.VolumeLessThanMinimum
 		}
 
 		else -> null

@@ -5,7 +5,7 @@ import com.makki.exchanges.abtractions.RemoteCallError
 import com.makki.exchanges.common.Result
 import com.makki.exchanges.common.mapError
 import com.makki.exchanges.common.mapOk
-import com.makki.exchanges.common.onError
+import com.makki.exchanges.common.wrapError
 import com.makki.exchanges.implementations.binance.BinanceApi
 import com.makki.exchanges.implementations.binance.BinanceKlineSocket
 import com.makki.exchanges.implementations.binance.BinanceUtils
@@ -13,6 +13,7 @@ import com.makki.exchanges.logging.defaultLogger
 import com.makki.exchanges.models.KlineEntry
 import com.makki.exchanges.models.MarketPair
 import com.makki.exchanges.tools.CachedStateSubject
+import com.makki.exchanges.tools.RateLimiterWeighted
 import com.makki.exchanges.tools.eqIgC
 import com.makki.exchanges.wrapper.*
 import kotlinx.coroutines.channels.BufferOverflow
@@ -20,18 +21,26 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import java.util.concurrent.TimeUnit
 
 /**
  * This wrapper defines supported features via traits
  * Also it maps the exchange specific model onto more generic models
  * This allows to abstract away from a specific exchange in most cases
  */
-open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper, WrapTraitApiKline,
+open class BinanceWrap(
+	private val api: BinanceApi = BinanceApi(),
+	private val apiConfig: ApiConfig = ApiConfig(),
+) :
+	ApiWrapper, WrapTraitApiKline,
 	WrapTraitErrorStream, WrapTraitApiMarketInfo, WrapTraitSocketKline {
 
 	private val errorFlow = CachedStateSubject<SealedApiError>(BufferOverflow.DROP_OLDEST)
 	private val logger = defaultLogger()
-
+	private val limiter = RateLimiterWeighted(
+		intervalMs = apiConfig.intervalMs ?: TimeUnit.SECONDS.toMillis(1),
+		weightLimit = apiConfig.weightLimit ?: 600f
+	)
 	private val binanceSocket = BinanceKlineSocket()
 
 	override fun start() {
@@ -40,8 +49,6 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 
 	override suspend fun trackKline(market: String, interval: String): Flow<Frame<KlineEntry>> {
 		binanceSocket.addMarket(market, interval) // checks internally for an existing one
-
-		binanceSocket.start()
 
 		return binanceSocket.observe()
 			.filter { it.check(true) { k -> k.market.eqIgC(market) } }
@@ -52,17 +59,18 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 		return errorFlow.asSharedFlow()
 	}
 
-	override suspend fun marketInfo(): Result<List<MarketPair>, SealedApiError> {
-		val response = api.marketInfo()
+	override suspend fun marketInfo(): Result<List<MarketPair>, SealedApiError> = notify {
+		val response = limiter.tryRun(10f) {
+			api.marketInfo()
+		}.unwrapOk() ?: return@notify SealedApiError.RateLimited.wrapError()
 
-		return response
+		return@notify response
 			.mapOk { marketInfo ->
 				marketInfo.symbols
 					.filter { it.status == BinanceUtils.CONST_MARKET_TRADING }
 					.map { pair -> binancePairToGeneric(pair) }
 			}
 			.mapError { rcError -> rcError.toSealedError() }
-			.onError { sealed -> notifyError(sealed) }
 	}
 
 	override suspend fun klineData(
@@ -70,18 +78,20 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 		interval: String,
 		limit: Int,
 		range: LongRange?,
-	): Result<List<KlineEntry>, SealedApiError> {
-		val response = if (range != null) {
-			api.klineData(market, interval, limit, range.first, range.last)
-		} else {
-			api.klineData(market, interval, limit)
-		}
-		return response
+	): Result<List<KlineEntry>, SealedApiError> = notify {
+		val response = limiter.tryRun(1f) {
+			if (range != null) {
+				api.klineData(market, interval, limit, range.first, range.last)
+			} else {
+				api.klineData(market, interval, limit)
+			}
+		}.unwrapOk() ?: return@notify SealedApiError.RateLimited.wrapError()
+
+		return@notify response
 			.mapOk { binanceKlines ->
 				binanceKlines.map { k -> binanceKlineToGeneric(k) }
 			}
 			.mapError { rcError -> rcError.toSealedError() }
-			.onError { sealed -> notifyError(sealed) }
 	}
 
 	protected open fun RemoteCallError<BinanceApi.BinanceError>.toSealedError(): SealedApiError {
@@ -92,7 +102,7 @@ open class BinanceWrap(private val api: BinanceApi = BinanceApi()) : ApiWrapper,
 		}
 	}
 
-	private fun notifyError(result: SealedApiError) {
+	override suspend fun notifyError(result: SealedApiError) {
 		errorFlow.tryEmit(result)
 	}
 

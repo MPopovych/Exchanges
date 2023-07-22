@@ -65,13 +65,11 @@ class SelfManagingSocket(
 	}
 
 	override suspend fun send(msg: ByteArray): Boolean {
-		session?.get()?.send(msg) ?: return false
-		return true
+		return session?.get()?.send(msg) ?: return false
 	}
 
 	override suspend fun send(msg: String): Boolean {
-		session?.get()?.send(msg) ?: return false
-		return true
+		return session?.get()?.send(msg) ?: return false
 	}
 
 	private fun internalStart() {

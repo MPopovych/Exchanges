@@ -25,9 +25,12 @@ class BinanceKlineSocket(socket: SelfManagingSocket? = null) {
 		.url("wss://stream.binance.com:9443/ws/stream")
 		.onConnectionOpen {
 			subject.emit(Frame.Connect())
-			this.send(getSubscriptionMessages().also {
+			val sent = this.send(getSubscriptionMessages().also {
 				logger.printDebug { "sending sub: ${it.replace("\n", " ")}" }
 			})
+			if (!sent) {
+				logger.printWarning("failed to send sub msg on open")
+			}
 		}
 		.onTextMsg { parse(it) }
 		.onConnectionClosed {
@@ -64,7 +67,9 @@ class BinanceKlineSocket(socket: SelfManagingSocket? = null) {
 		marketList.add(subscription)
 		val subMsg = wrapAddStreams(subscription.toStream())
 		logger.printDebug { "sending sub: ${subMsg.replace("\n", " ")}" }
-		socket.send(subMsg)
+		if (!socket.send(subMsg)) {
+			logger.printWarning("failed to send sub msg")
+		}
 	}
 
 	/**
@@ -77,7 +82,9 @@ class BinanceKlineSocket(socket: SelfManagingSocket? = null) {
 		marketList.remove(subscription)
 		val unsubMsg = wrapRemoveStreams(subscription.toStream())
 		logger.printDebug { "sending unsub: ${unsubMsg.replace("\n", " ")}" }
-		socket.send(unsubMsg)
+		if (!socket.send(unsubMsg)) {
+			logger.printWarning("failed to send unsub msg")
+		}
 	}
 
 	suspend fun addMarket(market: String, interval: KlineInterval) = addMarket(market, interval.apiCode)

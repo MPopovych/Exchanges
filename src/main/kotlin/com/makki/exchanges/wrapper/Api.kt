@@ -3,6 +3,7 @@ package com.makki.exchanges.wrapper
 import com.makki.exchanges.abtractions.Frame
 import com.makki.exchanges.abtractions.KlineInterval
 import com.makki.exchanges.common.Result
+import com.makki.exchanges.common.onError
 import com.makki.exchanges.models.KlineEntry
 import com.makki.exchanges.models.MarketPair
 import kotlinx.coroutines.flow.Flow
@@ -26,8 +27,18 @@ interface WSWrapper {
 	fun readWSName(marketPair: MarketPair): String
 }
 
+/**
+ * Wrap a method and intercepts the error, pushes it to the implemented method
+ */
 interface WrapTraitErrorStream {
 	suspend fun trackErrors(): Flow<SealedApiError>
+	suspend fun notifyError(result: SealedApiError)
+
+	suspend fun <T> WSWrapper.notify(block: suspend () -> Result<T, SealedApiError>): Result<T, SealedApiError> {
+		return block().onError { e ->
+			notifyError(e)
+		}
+	}
 }
 
 interface WrapTraitApiKline {

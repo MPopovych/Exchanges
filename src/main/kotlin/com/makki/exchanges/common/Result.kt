@@ -24,6 +24,11 @@ sealed interface Result<T, E> {
 		return (this as? Error<T, E>)?.error
 	}
 
+	@Throws(IllegalStateException::class)
+	fun requireError(): E {
+		return (this as? Error<T, E>)?.error ?: throw IllegalStateException("Not an error")
+	}
+
 	fun unwrapAny() = unwrapOk() ?: unwrapError()
 
 	fun unwrapOrThrow(block: (E) -> Exception): T {
@@ -33,6 +38,7 @@ sealed interface Result<T, E> {
 		}
 	}
 
+	@Throws(IllegalStateException::class)
 	fun unwrapOrThrow(): T {
 		return unwrapOrThrow {
 			throw IllegalStateException("Unwrap failed")
@@ -147,6 +153,13 @@ fun <C> Result<C, C>.toCommon(): C {
 	}
 }
 
+fun <C, T : C, E : C> Result<T, E>.toLowerCommon(): C {
+	return when (this) {
+		is Result.Error -> this.error
+		is Result.Ok -> this.data
+	}
+}
+
 fun <T, C, I : C, E : C> Result<Result<T, I>, E>.flattenToCommon(): Result<T, C> {
 	return when (this) {
 		is Result.Error -> Result.Error(this.error)
@@ -183,6 +196,18 @@ fun <T, E : Exception> Result<T, E>.throwInnerIfError(): Result<T, E>? {
 		throw this.error
 	}
 	return null
+}
+
+fun <R, T, E> Result<T, E>.returnError(): Result<R, E> {
+	return this.requireError().wrapError()
+}
+
+fun <T, E> E.wrapError(): Result<T, E> {
+	return Result.Error(this)
+}
+
+fun <T, E> T.wrapOk(): Result<T, E> {
+	return Result.Ok(this)
 }
 
 // endregion

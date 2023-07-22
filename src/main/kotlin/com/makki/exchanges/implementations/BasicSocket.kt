@@ -50,8 +50,8 @@ open class BasicSocket(
  */
 interface SocketSession {
 	suspend fun receive(): SocketFrame
-	suspend fun send(text: String)
-	suspend fun send(byteArray: ByteArray)
+	suspend fun send(text: String): Boolean
+	suspend fun send(byteArray: ByteArray): Boolean
 	fun cancel(e: CancellationException? = null)
 	fun isActive(): Boolean
 }
@@ -78,16 +78,29 @@ class BasicSocketSession(private val ktorSession: DefaultClientWebSocketSession)
 		}
 	}
 
-	override suspend fun send(text: String) {
-		ktorSession.send(text)
+	override suspend fun send(text: String): Boolean {
+		try {
+			ktorSession.send(text)
+			return true
+		} catch (e: Exception) {
+			return false
+		}
 	}
 
-	override suspend fun send(byteArray: ByteArray) {
-		ktorSession.send(byteArray)
+	override suspend fun send(byteArray: ByteArray): Boolean {
+		try {
+			ktorSession.send(byteArray)
+			return true
+		} catch (e: Exception) {
+			return false
+		}
 	}
 
 	override fun cancel(e: CancellationException?) {
-		ktorSession.cancel(e)
+		try {
+			ktorSession.cancel(e)
+		} catch (_: IllegalStateException) {
+		}
 	}
 
 	override fun isActive(): Boolean {
