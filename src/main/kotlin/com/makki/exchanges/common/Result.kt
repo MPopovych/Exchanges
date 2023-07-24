@@ -84,6 +84,26 @@ inline fun <T, E, N> Result<T, E>.mapError(block: (E) -> N): Result<T, N> {
 	}
 }
 
+inline fun <T, E> Result<T, E>.ifError(block: () -> Result<T, E>): Result<T, E> {
+	return when (this) {
+		is Result.Error -> block()
+		is Result.Ok -> this
+	}
+}
+
+inline fun <T, E> Result<T, E>.ifNullOrError(block: () -> Result<T, E>): Result<T, E> {
+	return when (this) {
+		is Result.Error -> block()
+		is Result.Ok -> {
+			if (this.data == null) {
+				return block()
+			} else {
+				this
+			}
+		}
+	}
+}
+
 inline fun <C, T, E> Result<T, E>.flatMapResult(block: (T) -> Result<C, E>): Result<C, E> {
 	return when (this) {
 		is Result.Error -> Result.Error(this.error)

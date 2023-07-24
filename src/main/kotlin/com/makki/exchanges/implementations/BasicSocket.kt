@@ -79,20 +79,20 @@ class BasicSocketSession(private val ktorSession: DefaultClientWebSocketSession)
 	}
 
 	override suspend fun send(text: String): Boolean {
-		try {
+		return try {
 			ktorSession.send(text)
-			return true
+			true
 		} catch (e: Exception) {
-			return false
+			false
 		}
 	}
 
 	override suspend fun send(byteArray: ByteArray): Boolean {
-		try {
+		return try {
 			ktorSession.send(byteArray)
-			return true
+			true
 		} catch (e: Exception) {
-			return false
+			false
 		}
 	}
 
