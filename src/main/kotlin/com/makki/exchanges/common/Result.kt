@@ -40,8 +40,8 @@ sealed interface Result<T, E> {
 
 	@Throws(IllegalStateException::class)
 	fun unwrapOrThrow(): T {
-		return unwrapOrThrow {
-			throw IllegalStateException("Unwrap failed")
+		return unwrapOrThrow { e ->
+			throw IllegalStateException("Unwrap failed: $e")
 		}
 	}
 }
