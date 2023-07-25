@@ -3,18 +3,20 @@ package com.makki.exchanges.implementations.binance
 import com.makki.exchanges.abtractions.Frame
 import com.makki.exchanges.abtractions.JsonParser
 import com.makki.exchanges.abtractions.KlineInterval
+import com.makki.exchanges.abtractions.StateObservable
 import com.makki.exchanges.implementations.SelfManagingSocket
 import com.makki.exchanges.implementations.binance.models.BinanceSocketKlineAsset
 import com.makki.exchanges.implementations.binance.models.BinanceSocketKlineMsg
 import com.makki.exchanges.logging.LogLevel
 import com.makki.exchanges.logging.loggerBuilder
 import com.makki.exchanges.tools.CachedStateSubject
+import com.makki.exchanges.tools.StateObserver
 import com.makki.exchanges.tools.ellipsis
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.util.concurrent.CopyOnWriteArraySet
 
-class BinanceKlineSocket(socket: SelfManagingSocket? = null) {
+class BinanceKlineSocket(socket: SelfManagingSocket? = null): StateObservable {
 
 	private val logger = loggerBuilder().level(LogLevel.Info).build()
 	private val marketList = CopyOnWriteArraySet<Subscription>()
@@ -25,9 +27,13 @@ class BinanceKlineSocket(socket: SelfManagingSocket? = null) {
 		.url("wss://stream.binance.com:9443/ws/stream")
 		.onConnectionOpen {
 			subject.emit(Frame.Connect())
-			val sent = this.send(getSubscriptionMessages().also {
-				logger.printDebug { "sending sub: ${it.replace("\n", " ")}" }
-			})
+			val sent = if (marketList.isNotEmpty()) {
+				this.send(getSubscriptionMessages().also {
+					logger.printDebug { "sending sub: ${it.replace("\n", " ")}" }
+				})
+			} else {
+				false
+			}
 			if (!sent) {
 				logger.printWarning("failed to send sub msg on open")
 			}
@@ -44,18 +50,16 @@ class BinanceKlineSocket(socket: SelfManagingSocket? = null) {
 	private val subject = CachedStateSubject<Frame<BinanceSocketKlineAsset>>(overflow = BufferOverflow.DROP_OLDEST)
 
 	fun observe() = subject.asSharedFlow()
+	fun isActivated() = socket.isActivated()
+	fun isRunning() = socket.isRunning()
+	fun start() = socket.start()
+	fun stop() = socket.close()
+	fun lazyStop() = socket.stopOnNext()
 
-	fun start() {
-		socket.start()
-	}
-
-	fun stop() {
-		socket.close()
-	}
-
-	fun lazyStop() {
-		socket.stopOnNext()
-	}
+	override fun state() = StateObserver()
+		.track("active") { isActivated() }
+		.track("running") { isRunning() }
+		.track("market_count") { marketList.size }
 
 	/**
 	 * runtime adding of market

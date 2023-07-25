@@ -2,6 +2,7 @@ package com.makki.exchanges.implementations.binance.wrap
 
 import com.makki.exchanges.abtractions.Frame
 import com.makki.exchanges.abtractions.RemoteCallError
+import com.makki.exchanges.abtractions.StateObservable
 import com.makki.exchanges.common.Result
 import com.makki.exchanges.common.mapError
 import com.makki.exchanges.common.mapOk
@@ -14,6 +15,7 @@ import com.makki.exchanges.models.KlineEntry
 import com.makki.exchanges.models.MarketPair
 import com.makki.exchanges.tools.CachedStateSubject
 import com.makki.exchanges.tools.RateLimiterWeighted
+import com.makki.exchanges.tools.StateObserver
 import com.makki.exchanges.tools.eqIgC
 import com.makki.exchanges.wrapper.*
 import kotlinx.coroutines.channels.BufferOverflow
@@ -33,7 +35,7 @@ open class BinanceWrap(
 	private val apiConfig: ApiConfig = ApiConfig(),
 ) :
 	ApiWrapper, WrapTraitApiKline,
-	WrapTraitErrorStream, WrapTraitApiMarketInfo, WrapTraitSocketKline {
+	WrapTraitErrorStream, WrapTraitApiMarketInfo, WrapTraitSocketKline, StateObservable {
 
 	private val errorFlow = CachedStateSubject<SealedApiError>(BufferOverflow.DROP_OLDEST)
 	private val logger = defaultLogger()
@@ -41,16 +43,16 @@ open class BinanceWrap(
 		intervalMs = apiConfig.intervalMs ?: TimeUnit.SECONDS.toMillis(1),
 		weightLimit = apiConfig.weightLimit ?: 600f
 	)
-	private val binanceSocket = BinanceKlineSocket()
+	private val klineSocket = BinanceKlineSocket()
 
 	override fun start() {
-		binanceSocket.start()
+		klineSocket.start()
 	}
 
 	override suspend fun trackKline(market: String, interval: String): Flow<Frame<KlineEntry>> {
-		binanceSocket.addMarket(market, interval) // checks internally for an existing one
+		klineSocket.addMarket(market, interval) // checks internally for an existing one
 
-		return binanceSocket.observe()
+		return klineSocket.observe()
 			.filter { it.check(true) { k -> k.market.eqIgC(market) } }
 			.map { f -> f.mapAsset { k -> binanceKlineSocketToGeneric(k) } }
 	}
@@ -105,6 +107,10 @@ open class BinanceWrap(
 	override suspend fun notifyError(result: SealedApiError) {
 		errorFlow.tryEmit(result)
 	}
+
+	override fun state(): StateObserver = StateObserver()
+		.merge("kline_socket", klineSocket.state())
+		.track("error") { errorFlow.replayCache.firstOrNull() as Any }
 
 	override fun readApiName(marketPair: MarketPair): String {
 		return BinanceUtils.getApiMarketName(marketPair)

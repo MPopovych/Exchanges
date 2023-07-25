@@ -43,7 +43,7 @@ class SelfManagingSocket(
 		}
 	}
 
-	fun activated() = activated.get()
+	fun isActivated() = activated.get()
 	fun isRunning() = session?.get() != null
 
 	fun stopOnNext() {
@@ -74,7 +74,7 @@ class SelfManagingSocket(
 
 	private fun internalStart() {
 		connectionJob = scope.launch {
-			while (activated()) {
+			while (isActivated()) {
 				val def = scope.async(start = CoroutineStart.LAZY) {
 					socket.connect(urlProducer()) {
 						logger.printInfoPositive("$name connected")
@@ -94,7 +94,7 @@ class SelfManagingSocket(
 					logger.printWarning("$name rejected, received an error: $e")
 				}
 				val nextDelay = retryTimer.getNextRetryDelay()
-				if (activated()) {
+				if (isActivated()) {
 					logger.printWarning("$name stopped, restart in ${nextDelay}ms")
 				} else {
 					logger.printError("$name stopped, wont restart")
