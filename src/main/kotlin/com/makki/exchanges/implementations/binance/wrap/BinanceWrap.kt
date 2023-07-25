@@ -11,7 +11,7 @@ import com.makki.exchanges.implementations.binance.BinanceApi
 import com.makki.exchanges.implementations.binance.BinanceKlineSocket
 import com.makki.exchanges.implementations.binance.BinanceUtils
 import com.makki.exchanges.logging.defaultLogger
-import com.makki.exchanges.models.KlineEntry
+import com.makki.exchanges.models.Kline
 import com.makki.exchanges.models.MarketPair
 import com.makki.exchanges.tools.CachedStateSubject
 import com.makki.exchanges.tools.RateLimiterWeighted
@@ -49,12 +49,12 @@ open class BinanceWrap(
 		klineSocket.start()
 	}
 
-	override suspend fun trackKline(market: String, interval: String): Flow<Frame<KlineEntry>> {
+	override suspend fun trackKline(market: String, interval: String): Flow<Frame<Kline>> {
 		klineSocket.addMarket(market, interval) // checks internally for an existing one
 
 		return klineSocket.observe()
 			.filter { it.check(true) { k -> k.market.eqIgC(market) } }
-			.map { f -> f.mapAsset { k -> binanceKlineSocketToGeneric(k) } }
+			.map { f -> f.mapAsset { k -> k as Kline } }
 	}
 
 	override suspend fun trackErrors(): Flow<SealedApiError> {
@@ -80,7 +80,7 @@ open class BinanceWrap(
 		interval: String,
 		limit: Int,
 		range: LongRange?,
-	): Result<List<KlineEntry>, SealedApiError> = notify {
+	): Result<List<Kline>, SealedApiError> = notify {
 		val response = limiter.tryRun(1f) {
 			if (range != null) {
 				api.klineData(market, interval, limit, range.first, range.last)
@@ -90,9 +90,7 @@ open class BinanceWrap(
 		}.unwrapOk() ?: return@notify SealedApiError.RateLimited.wrapError()
 
 		return@notify response
-			.mapOk { binanceKlines ->
-				binanceKlines.map { k -> binanceKlineToGeneric(k) }
-			}
+			.mapOk { it.map { it as Kline } }
 			.mapError { rcError -> rcError.toSealedError() }
 	}
 

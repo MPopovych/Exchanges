@@ -4,7 +4,8 @@ import com.makki.exchanges.abtractions.Frame
 import com.makki.exchanges.abtractions.KlineInterval
 import com.makki.exchanges.common.Result
 import com.makki.exchanges.common.onError
-import com.makki.exchanges.models.KlineEntry
+import com.makki.exchanges.models.Kline
+import com.makki.exchanges.models.KlineAsset
 import com.makki.exchanges.models.MarketPair
 import kotlinx.coroutines.flow.Flow
 
@@ -47,7 +48,7 @@ interface WrapTraitApiKline {
 		interval: String,
 		limit: Int = 500,
 		range: LongRange? = null,
-	): Result<List<KlineEntry>, SealedApiError>
+	): Result<List<Kline>, SealedApiError>
 }
 
 interface WrapTraitApiMarketInfo {
@@ -58,12 +59,12 @@ interface WrapTraitSocketKline : WSWrapper {
 	suspend fun trackKline(
 		market: String,
 		interval: String,
-	): Flow<Frame<KlineEntry>>
+	): Flow<Frame<Kline>>
 
 	suspend fun trackKline(
 		market: String,
 		interval: KlineInterval,
-	): Flow<Frame<KlineEntry>> = trackKline(market, interval.apiCode)
+	): Flow<Frame<Kline>> = trackKline(market, interval.apiCode)
 }
 
 // region casts

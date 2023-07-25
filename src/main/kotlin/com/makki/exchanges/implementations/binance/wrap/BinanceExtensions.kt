@@ -7,7 +7,8 @@ import com.makki.exchanges.implementations.binance.models.BinanceMarketPair
 import com.makki.exchanges.implementations.binance.models.BinanceMarketPairFilter
 import com.makki.exchanges.implementations.binance.models.BinanceSocketKlineAsset
 import com.makki.exchanges.models.DetailedMarketPair
-import com.makki.exchanges.models.KlineEntry
+import com.makki.exchanges.models.Kline
+import com.makki.exchanges.models.KlineAsset
 import com.makki.exchanges.models.MarketPair
 import com.makki.exchanges.tools.findPrecision
 import com.makki.exchanges.tools.inIgC
@@ -30,32 +31,6 @@ internal fun binancePairToGeneric(p: BinanceMarketPair): MarketPair {
 		minBasePrice = priceFilter?.minPrice ?: 0.0,
 		takeRatio = 0.999, // hardcoded
 		makerRatio = 0.999 // hardcoded
-	)
-}
-
-internal fun binanceKlineSocketToGeneric(k: BinanceSocketKlineAsset): KlineEntry {
-	return KlineEntry(
-		start = k.start,
-		end = k.end,
-		open = k.open,
-		high = k.high,
-		low = k.low,
-		close = k.close,
-		volume = k.volume,
-		trades = k.trades,
-	)
-}
-
-internal fun binanceKlineToGeneric(k: BinanceKline): KlineEntry {
-	return KlineEntry(
-		start = k.start,
-		end = k.end,
-		open = k.open,
-		high = k.high,
-		low = k.low,
-		close = k.close,
-		volume = k.volume,
-		trades = k.trades,
 	)
 }
 
