@@ -64,7 +64,7 @@ object KlineUtil {
 	sealed interface KlineProcessResult {
 		class Ok(val data: List<KlineEntry>) : KlineProcessResult
 		class Gap(val list: List<Pair<Long, Long>>) : KlineProcessResult
-		data object Empty : KlineProcessResult
+		object Empty : KlineProcessResult
 	}
 
 }

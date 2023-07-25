@@ -39,7 +39,7 @@ sealed class BinanceMarketPairFilter {
 	) : BinanceMarketPairFilter()
 
 	@Serializable
-	data object Unknown : BinanceMarketPairFilter()
+	object Unknown : BinanceMarketPairFilter()
 }
 
 @OptIn(ExperimentalSerializationApi::class)

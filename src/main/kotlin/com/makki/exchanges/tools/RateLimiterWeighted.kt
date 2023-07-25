@@ -64,5 +64,5 @@ class RateLimiterWeighted(
 	}
 
 
-	data object Rejection
+	object Rejection
 }

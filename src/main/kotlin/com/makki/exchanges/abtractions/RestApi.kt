@@ -13,7 +13,7 @@ interface RestApi {
 	}
 
 	fun Int.isOkHttpCode(): Boolean {
-		return this in (200..<300)
+		return this in 200..299
 	}
 
 	interface ErrorValidator {
