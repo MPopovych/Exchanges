@@ -15,7 +15,7 @@ data class BinanceKline(
 	override val close: Double,
 	override val volume: Double,
 	override val trades: Int,
-): Kline
+) : Kline
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializer(forClass = BinanceKline::class)
@@ -64,4 +64,4 @@ data class BinanceSocketKlineAsset(
 	override val volume: Double,
 	@SerialName("n")
 	override val trades: Int,
-): Kline
+) : Kline

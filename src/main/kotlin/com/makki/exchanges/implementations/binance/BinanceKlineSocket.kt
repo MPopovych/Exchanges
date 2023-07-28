@@ -16,7 +16,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.util.concurrent.CopyOnWriteArraySet
 
-class BinanceKlineSocket(socket: SelfManagingSocket? = null): StateObservable {
+class BinanceKlineSocket(socket: SelfManagingSocket? = null) : StateObservable {
 
 	private val logger = loggerBuilder().level(LogLevel.Info).build()
 	private val marketList = CopyOnWriteArraySet<Subscription>()

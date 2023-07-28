@@ -36,7 +36,7 @@ interface MarketRatioTrait : MarketPair {
 data class SimpleMarketPair(
 	override val base: String,
 	override val quote: String,
-): MarketPair
+) : MarketPair
 
 
 data class DetailedMarketPair(

@@ -24,4 +24,4 @@ data class KlineAsset(
 	override val close: Double,
 	override val volume: Double,
 	override val trades: Int,
-): Kline
+) : Kline
