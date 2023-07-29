@@ -7,7 +7,6 @@ fun String.inIgC(value: String) = this.contains(value, true)
 
 fun String.eqIgC(value: String) = this.equals(value, true)
 
-
 fun produceError(): Nothing = throw IllegalStateException("Logic failure")
 
 @Throws
