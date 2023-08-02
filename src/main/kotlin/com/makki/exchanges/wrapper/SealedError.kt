@@ -15,7 +15,6 @@ sealed interface SealedApiError {
 	data class ConnectionError(val description: String) : SealedApiError
 
 	object SafeguardBlock : SealedApiError
-
 	object InvalidAuth : SealedApiError, ErrorTags.Persisting, ErrorTags.ShouldNotify
 	object Banned : SealedApiError, ErrorTags.Persisting, ErrorTags.ShouldNotify
 

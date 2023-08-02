@@ -4,8 +4,8 @@ import com.makki.exchanges.abtractions.Frame
 import com.makki.exchanges.abtractions.KlineInterval
 import com.makki.exchanges.common.Result
 import com.makki.exchanges.common.onError
+import com.makki.exchanges.models.BalanceBook
 import com.makki.exchanges.models.Kline
-import com.makki.exchanges.models.KlineAsset
 import com.makki.exchanges.models.MarketPair
 import kotlinx.coroutines.flow.Flow
 
@@ -55,6 +55,10 @@ interface WrapTraitApiMarketInfo {
 	suspend fun marketInfo(): Result<List<MarketPair>, SealedApiError>
 }
 
+interface WrapTraitApiBalance {
+	suspend fun balance(): Result<BalanceBook, SealedApiError>
+}
+
 interface WrapTraitSocketKline : WSWrapper {
 	suspend fun trackKline(
 		market: String,
@@ -68,6 +72,11 @@ interface WrapTraitSocketKline : WSWrapper {
 }
 
 // region casts
+
+@Throws
+fun ApiWrapper.requireBalance(): WrapTraitApiBalance {
+	return this as? WrapTraitApiBalance ?: throw NotImplementedError("Failed requirement for balance api")
+}
 
 @Throws
 fun ApiWrapper.requireKlineApi(): WrapTraitApiKline {

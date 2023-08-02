@@ -2,10 +2,16 @@ package com.makki.exchanges.tools
 
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 fun String.inIgC(value: String) = this.contains(value, true)
 
 fun String.eqIgC(value: String) = this.equals(value, true)
+
+fun String.urlEncodeUTF8(): String {
+	return URLEncoder.encode(this, StandardCharsets.UTF_8)
+}
 
 fun produceError(): Nothing = throw IllegalStateException("Logic failure")
 

@@ -11,6 +11,8 @@ import com.makki.exchanges.implementations.binance.BinanceApi
 import com.makki.exchanges.implementations.binance.BinanceKlineSocket
 import com.makki.exchanges.implementations.binance.BinanceUtils
 import com.makki.exchanges.logging.defaultLogger
+import com.makki.exchanges.models.BalanceBook
+import com.makki.exchanges.models.BalanceEntry
 import com.makki.exchanges.models.Kline
 import com.makki.exchanges.models.MarketPair
 import com.makki.exchanges.tools.CachedStateSubject
@@ -32,33 +34,39 @@ import java.util.concurrent.TimeUnit
  */
 open class BinanceWrap(
 	private val api: BinanceApi = BinanceApi(),
-	private val apiConfig: ApiConfig = ApiConfig(),
+	private val protectionConfig: SafeGuardConfig = SafeGuardConfig(),
 ) :
-	ApiWrapper, WrapTraitApiKline,
+	ApiWrapper, WrapTraitApiBalance, WrapTraitApiKline,
 	WrapTraitErrorStream, WrapTraitApiMarketInfo, WrapTraitSocketKline, StateObservable {
 
 	private val errorFlow = CachedStateSubject<SealedApiError>(BufferOverflow.DROP_OLDEST)
 	private val logger = defaultLogger()
 	private val limiter = RateLimiterWeighted(
-		intervalMs = apiConfig.intervalMs ?: TimeUnit.SECONDS.toMillis(1),
-		weightLimit = apiConfig.weightLimit ?: 600f
+		intervalMs = protectionConfig.intervalMs ?: TimeUnit.SECONDS.toMillis(1),
+		weightLimit = protectionConfig.weightLimit ?: 600f
 	)
 	private val klineSocket = BinanceKlineSocket()
 
-	override fun start() {
-		klineSocket.start()
-	}
+	override suspend fun balance(): Result<BalanceBook, SealedApiError> = notify {
+		if (api.hasCredentials) return@notify SealedApiError.InvalidAuth.wrapError()
 
-	override suspend fun trackKline(market: String, interval: String): Flow<Frame<Kline>> {
-		klineSocket.addMarket(market, interval) // checks internally for an existing one
+		val response = limiter.tryRun(10f) {
+			api.getUserData()
+		}.unwrapOk() ?: return@notify SealedApiError.RateLimited.wrapError()
 
-		return klineSocket.observe()
-			.filter { it.check(true) { k -> k.market.eqIgC(market) } }
-			.map { f -> f.mapAsset { k -> k as Kline } }
-	}
-
-	override suspend fun trackErrors(): Flow<SealedApiError> {
-		return errorFlow.asSharedFlow()
+		return@notify response
+			.mapOk { marketInfo ->
+				marketInfo.balances.map {
+					BalanceEntry(
+						baseName = it.asset,
+						available = it.free,
+						frozen = it.locked
+					)
+				}
+			}.mapOk {
+				BalanceBook(it)
+			}
+			.mapError { rcError -> rcError.toSealedError() }
 	}
 
 	override suspend fun marketInfo(): Result<List<MarketPair>, SealedApiError> = notify {
@@ -102,8 +110,24 @@ open class BinanceWrap(
 		}
 	}
 
+	override fun start() {
+		klineSocket.start()
+	}
+
+	override suspend fun trackKline(market: String, interval: String): Flow<Frame<Kline>> {
+		klineSocket.addMarket(market, interval) // checks internally for an existing one
+
+		return klineSocket.observe()
+			.filter { it.check(true) { k -> k.market.eqIgC(market) } }
+			.map { f -> f.mapAsset { k -> k as Kline } }
+	}
+
 	override suspend fun notifyError(result: SealedApiError) {
 		errorFlow.tryEmit(result)
+	}
+
+	override suspend fun trackErrors(): Flow<SealedApiError> {
+		return errorFlow.asSharedFlow()
 	}
 
 	override fun state(): StateObserver = StateObserver()
