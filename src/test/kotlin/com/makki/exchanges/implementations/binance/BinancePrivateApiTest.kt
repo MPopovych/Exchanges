@@ -36,7 +36,7 @@ class BinancePrivateApiTest {
 
 	@Test
 	fun testBinanceLimitOrderRequest() = asyncTest {
-		val failingResponse = exchange.api.createLimitOrder("BTCUSDT", "SELL", "-0.001", "129000.0")
+		val failingResponse = exchange.api.createLimitOrderInBase("BTCUSDT", "SELL", "0.000000001", "129000.0")
 
 		assert(failingResponse.isError()) { failingResponse.unwrapOk().toString() }
 		val error = failingResponse.unwrapError()
@@ -54,7 +54,7 @@ class BinancePrivateApiTest {
 
 	@Test
 	fun testBinanceCancelOrderRequest() = asyncTest {
-		val failingResponse = exchange.api.cancelOrder("BTCUSDT", "1233")
+		val failingResponse = exchange.api.cancelOrder("BTCUSDT", "83138")
 
 		assert(failingResponse.isError()) { failingResponse.unwrapOk().toString() }
 		val error = failingResponse.unwrapError()

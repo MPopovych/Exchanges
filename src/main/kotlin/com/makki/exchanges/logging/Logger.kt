@@ -14,11 +14,15 @@ enum class LogLevel(val priority: Int) {
 	Debug(3),
 }
 
-class LoggerBuilder internal constructor(private val callerName: String) {
+class LoggerBuilder internal constructor(private var callerName: String) {
 
 	private var time: Boolean = true
 	private var timePattern: String = "HH:mm:ss.SSS"
 	private var logLevel: LogLevel = LogLevel.Info
+
+	fun callerName(name: String) = this.also {
+		this.callerName = name
+	}
 
 	fun time(enabled: Boolean): LoggerBuilder = this.also { time = enabled }
 
@@ -35,7 +39,7 @@ class LoggerBuilder internal constructor(private val callerName: String) {
 }
 
 class Logger internal constructor(
-	private val callerName: String,
+	val callerName: String,
 	private val logLevel: LogLevel,
 	private val time: Boolean,
 	timePattern: String,

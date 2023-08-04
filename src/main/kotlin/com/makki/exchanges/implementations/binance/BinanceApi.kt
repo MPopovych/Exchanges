@@ -8,10 +8,10 @@ import com.makki.exchanges.common.Result
 import com.makki.exchanges.implementations.BasicClient
 import com.makki.exchanges.implementations.binance.models.BinanceKline
 import com.makki.exchanges.implementations.binance.models.BinanceMarketInfo
+import com.makki.exchanges.implementations.binance.models.BinanceOrder_RESULT
 import com.makki.exchanges.implementations.binance.models.BinanceUserData
 import com.makki.exchanges.logging.defaultLogger
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 import kotlin.math.max
 import kotlin.math.min
 
@@ -80,45 +80,67 @@ open class BinanceApi(
 		return privateApiGetMethod("api/v3/account", emptyMap(), Client.Method.GET)
 	}
 
-	suspend fun getOpenOrders(): Result<JsonElement, RemoteCallError<BinanceError>> {
-		//TODO("Define return type")
+	suspend fun getOpenOrders(): Result<BinanceOrder_RESULT, RemoteCallError<BinanceError>> {
 		return privateApiGetMethod("api/v3/openOrders", emptyMap(), Client.Method.GET)
 	}
 
-	suspend fun getOrder(symbol: String, orderId: String): Result<JsonElement, RemoteCallError<BinanceError>> {
+	suspend fun getOrder(
+		symbol: String,
+		orderId: String,
+	): Result<BinanceOrder_RESULT, RemoteCallError<BinanceError>> {
 		val queryMap = linkedMapOf(
 			"symbol" to symbol, // binance require uppercase
 			"orderId" to orderId
 		)
-		//TODO("Define return type")
 		return privateApiGetMethod("api/v3/order", queryMap, Client.Method.GET)
 	}
 
-	suspend fun cancelOrder(symbol: String, orderId: String): Result<JsonElement, RemoteCallError<BinanceError>> {
+	suspend fun cancelOrder(
+		symbol: String,
+		orderId: String,
+	): Result<BinanceOrder_RESULT, RemoteCallError<BinanceError>> {
 		val queryMap = linkedMapOf(
 			"symbol" to symbol, // binance require uppercase
 			"orderId" to orderId
 		)
-		//TODO("Define return type")
 		return privateApiGetMethod("api/v3/order", queryMap, Client.Method.DELETE)
 	}
 
-	suspend fun createLimitOrder(
+	suspend fun createLimitOrderInBase(
 		symbol: String,
 		side: String,
 		quantity: String,
 		price: String,
 		timeInForce: String = "GTC",
-	): Result<JsonElement, RemoteCallError<BinanceError>> {
+	): Result<BinanceOrder_RESULT, RemoteCallError<BinanceError>> {
 		val queryMap = linkedMapOf(
 			"symbol" to symbol,
 			"side" to side,
 			"price" to price,
 			"quantity" to quantity,
 			"type" to "LIMIT",
+			"newOrderRespType" to "FULL",
 			"timeInForce" to timeInForce
 		)
-		//TODO("Define return type")
+		return privateApiGetMethod("api/v3/order", queryMap, Client.Method.POST)
+	}
+
+	suspend fun createLimitOrderInQuote(
+		symbol: String,
+		side: String,
+		quoteOrderQty: String,
+		price: String,
+		timeInForce: String = "GTC",
+	): Result<BinanceOrder_RESULT, RemoteCallError<BinanceError>> {
+		val queryMap = linkedMapOf(
+			"symbol" to symbol,
+			"side" to side,
+			"price" to price,
+			"quoteOrderQty" to quoteOrderQty,
+			"type" to "LIMIT",
+			"newOrderRespType" to "FULL",
+			"timeInForce" to timeInForce
+		)
 		return privateApiGetMethod("api/v3/order", queryMap, Client.Method.POST)
 	}
 

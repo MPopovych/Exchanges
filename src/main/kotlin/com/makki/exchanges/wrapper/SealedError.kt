@@ -28,13 +28,15 @@ sealed interface SealedApiError {
 	object MarketBlocked : SealedApiError, ErrorTags.Temporary
 
 	object PersistingHttpException : SealedApiError, ErrorTags.Persisting
+	object BadRequestException : SealedApiError, ErrorTags.Persisting, ErrorTags.ShouldNotify
 
 	sealed interface Order : SealedApiError {
-		object ArgumentFail : Order, ErrorTags.ShouldNotify
+		object OrderReject: Order, ErrorTags.ShouldNotify
+		object CancelReject: Order, ErrorTags.ShouldNotify
 		object OrderNotFound : Order
 		object AlreadyCancelled : Order
 		object InsufficientBalance : Order
-		object VolumeLessThanMinimum : Order, ErrorTags.ShouldNotify
+		object FilterFailure : Order, ErrorTags.ShouldNotify
 		object PriceFillMiss : Order
 	}
 }

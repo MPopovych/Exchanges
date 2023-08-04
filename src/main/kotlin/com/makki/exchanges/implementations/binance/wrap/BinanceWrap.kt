@@ -10,11 +10,9 @@ import com.makki.exchanges.common.wrapError
 import com.makki.exchanges.implementations.binance.BinanceApi
 import com.makki.exchanges.implementations.binance.BinanceKlineSocket
 import com.makki.exchanges.implementations.binance.BinanceUtils
+import com.makki.exchanges.implementations.binance.models.BinanceOrderFlattened
 import com.makki.exchanges.logging.defaultLogger
-import com.makki.exchanges.models.BalanceBook
-import com.makki.exchanges.models.BalanceEntry
-import com.makki.exchanges.models.Kline
-import com.makki.exchanges.models.MarketPair
+import com.makki.exchanges.models.*
 import com.makki.exchanges.tools.CachedStateSubject
 import com.makki.exchanges.tools.RateLimiterWeighted
 import com.makki.exchanges.tools.StateObserver
@@ -25,6 +23,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.util.concurrent.TimeUnit
 
 /**
@@ -34,16 +34,16 @@ import java.util.concurrent.TimeUnit
  */
 open class BinanceWrap(
 	private val api: BinanceApi = BinanceApi(),
-	private val protectionConfig: SafeGuardConfig = SafeGuardConfig(),
+	private val safeGuardConfig: SafeGuardConfig = SafeGuardConfig(),
 ) :
-	ApiWrapper, WrapTraitApiBalance, WrapTraitApiKline,
+	ApiWrapper, WrapTraitApiBalance, WrapTraitApiLimitOrder, WrapTraitApiKline,
 	WrapTraitErrorStream, WrapTraitApiMarketInfo, WrapTraitSocketKline, StateObservable {
 
 	private val errorFlow = CachedStateSubject<SealedApiError>(BufferOverflow.DROP_OLDEST)
 	private val logger = defaultLogger()
 	private val limiter = RateLimiterWeighted(
-		intervalMs = protectionConfig.intervalMs ?: TimeUnit.SECONDS.toMillis(1),
-		weightLimit = protectionConfig.weightLimit ?: 600f
+		intervalMs = safeGuardConfig.intervalMs ?: TimeUnit.SECONDS.toMillis(1),
+		weightLimit = safeGuardConfig.weightLimit ?: 600f
 	)
 	private val klineSocket = BinanceKlineSocket()
 
@@ -63,9 +63,66 @@ open class BinanceWrap(
 						frozen = it.locked
 					)
 				}
-			}.mapOk {
-				BalanceBook(it)
+			}.mapOk { BalanceBook(it) }
+			.mapError { rcError -> rcError.toSealedError() }
+	}
+
+	override suspend fun createLimitOrder(
+		pair: MarketPair,
+		spend: Currency,
+		spendVolume: BigDecimal,
+		gainVolume: BigDecimal,
+		price: BigDecimal,
+	): Result<KnownOrder, SealedApiError> = notify {
+		val gain = pair.getOpposite(spend)
+			?: return@notify SealedApiError.Unexpected("No $spend in ${pair.prettyName()}").wrapError()
+
+		val knownRounding = pair as? MarketPairPreciseTrait
+			?: return@notify SealedApiError.Unexpected("Pair ${pair.prettyName()} has no rounding data").wrapError()
+
+		if (!safeGuardConfig.allowOrderCreation) return@notify SealedApiError.SafeguardBlock.wrapError()
+
+		val response = limiter.tryRun(1f) {
+			val symbol = readApiName(pair)
+
+			if (spend == pair.baseCurrency()) {
+				val priceStr = price.setScale(knownRounding.quotePrecision, RoundingMode.CEILING).toPlainString()
+				val baseV = spendVolume.setScale(knownRounding.basePrecision, RoundingMode.FLOOR).toPlainString()
+				api.createLimitOrderInBase(symbol, side = "SELL", price = priceStr, quantity = baseV)
+			} else {
+				val priceStr = price.setScale(knownRounding.quotePrecision, RoundingMode.FLOOR).toPlainString()
+				val quoteV = spendVolume.setScale(knownRounding.quotePrecision, RoundingMode.FLOOR).toPlainString()
+				api.createLimitOrderInQuote(symbol, side = "BUY", price = priceStr, quoteOrderQty = quoteV)
 			}
+		}.unwrapOk() ?: return@notify SealedApiError.RateLimited.wrapError()
+
+		return@notify response
+			.mapOk { BinanceOrderFlattened.from(it) }
+			.mapOk { it.toGeneric(pair, spend, gain) }
+			.mapError { rcError -> rcError.toSealedError() }
+	}
+
+	override suspend fun queryOrder(order: KnownOrder): Result<KnownOrder, SealedApiError> = notify {
+		val response = limiter.tryRun(2f) {
+			val symbol = readApiName(order.pair)
+			api.getOrder(symbol, order.id.id)
+		}.unwrapOk() ?: return@notify SealedApiError.RateLimited.wrapError()
+
+		return@notify response
+			.mapOk { BinanceOrderFlattened.from(it) }
+			.mapOk { it.toGeneric(order.pair, order.spendCurrency, order.gainCurrency) }
+			.mapError { rcError -> rcError.toSealedError() }
+	}
+
+	override suspend fun cancelOrder(order: KnownOrder): Result<KnownOrder, SealedApiError> = notify {
+		val response = limiter.tryRun(1f) {
+			val symbol = readApiName(order.pair)
+			api.cancelOrder(symbol, order.id.id)
+		}.unwrapOk() ?: return@notify SealedApiError.RateLimited.wrapError()
+
+		return@notify response
+			.mapOk { BinanceOrderFlattened.from(it) }
+			.mapOk { it.toGeneric(order.pair, order.spendCurrency, order.gainCurrency) }
 			.mapError { rcError -> rcError.toSealedError() }
 	}
 
@@ -83,6 +140,7 @@ open class BinanceWrap(
 			.mapError { rcError -> rcError.toSealedError() }
 	}
 
+	@Suppress("USELESS_CAST")
 	override suspend fun klineData(
 		market: String,
 		interval: String,
@@ -98,7 +156,7 @@ open class BinanceWrap(
 		}.unwrapOk() ?: return@notify SealedApiError.RateLimited.wrapError()
 
 		return@notify response
-			.mapOk { it.map { it as Kline } }
+			.mapOk { r -> r.map { k -> k as Kline } }
 			.mapError { rcError -> rcError.toSealedError() }
 	}
 
@@ -114,6 +172,7 @@ open class BinanceWrap(
 		klineSocket.start()
 	}
 
+	@Suppress("USELESS_CAST")
 	override suspend fun trackKline(market: String, interval: String): Flow<Frame<Kline>> {
 		klineSocket.addMarket(market, interval) // checks internally for an existing one
 
@@ -141,5 +200,4 @@ open class BinanceWrap(
 	override fun readWSName(marketPair: MarketPair): String {
 		return BinanceUtils.getApiMarketName(marketPair)
 	}
-
 }
