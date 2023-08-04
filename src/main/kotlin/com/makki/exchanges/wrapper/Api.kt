@@ -71,6 +71,13 @@ interface WrapTraitApiBalance {
 	suspend fun balance(): Result<BalanceBook, SealedApiError>
 }
 
+interface WrapTraitApiOrder {
+
+	suspend fun allOpenOrders(): Result<List<UnknownOrder>, SealedApiError>
+	suspend fun queryOrder(id: OrderId, pair: MarketPair): Result<UnknownOrder, SealedApiError>
+	suspend fun cancelOrder(id: OrderId, pair: MarketPair): Result<UnknownOrder, SealedApiError>
+}
+
 interface WrapTraitApiLimitOrder {
 	suspend fun createLimitOrder(
 		pair: MarketPair,

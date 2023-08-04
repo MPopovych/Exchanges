@@ -80,7 +80,7 @@ open class BinanceApi(
 		return privateApiGetMethod("api/v3/account", emptyMap(), Client.Method.GET)
 	}
 
-	suspend fun getOpenOrders(): Result<BinanceOrder_RESULT, RemoteCallError<BinanceError>> {
+	suspend fun getOpenOrders(): Result<List<BinanceOrder_RESULT>, RemoteCallError<BinanceError>> {
 		return privateApiGetMethod("api/v3/openOrders", emptyMap(), Client.Method.GET)
 	}
 

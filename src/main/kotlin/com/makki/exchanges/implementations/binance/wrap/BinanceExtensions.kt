@@ -12,7 +12,7 @@ import com.makki.exchanges.tools.inIgC
 import com.makki.exchanges.wrapper.SealedApiError
 import java.math.BigDecimal
 
-internal fun BinanceOrderFlattened.toGeneric(
+internal fun BinanceOrderFlattened.toKnown(
 	pair: MarketPair,
 	spend: Currency,
 	gain: Currency,
@@ -42,6 +42,7 @@ internal fun BinanceOrderFlattened.toGeneric(
 	return KnownOrder(
 		id = this.orderId,
 		pair = pair,
+		state = this.state,
 		spendCurrency = spend,
 		gainCurrency = pair.getOpposite(spend) ?: throw IllegalStateException(),
 		spendOrigVolume = spendOrigVolume,
@@ -49,7 +50,21 @@ internal fun BinanceOrderFlattened.toGeneric(
 		spendFilledVolume = spendFillVolume,
 		gainFilledVolume = gainFillVolume,
 		price = this.price,
+	)
+}
+
+internal fun BinanceOrderFlattened.toUnknown(): UnknownOrder {
+	return UnknownOrder(
+		id = this.orderId,
+		symbol = this.symbol,
 		state = this.state,
+		type = this.type,
+		side = this.side,
+		baseOrigVolume = this.baseOrigVolume,
+		quoteOrigVolume = this.baseOrigVolume * this.price,
+		baseFilledVolume = this.baseFillVolume,
+		quoteFilledVolume = this.quoteFillVolume,
+		price = this.price,
 	)
 }
 

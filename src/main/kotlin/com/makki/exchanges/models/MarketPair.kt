@@ -30,6 +30,10 @@ interface MarketPair {
 		if (currency.name.eqIgC(quote)) return baseCurrency()
 		return null
 	}
+
+	fun eq(other: MarketPair): Boolean {
+		return base.eqIgC(other.base) && quote.eqIgC(other.quote)
+	}
 }
 
 interface MarketPairPreciseTrait : MarketPair {

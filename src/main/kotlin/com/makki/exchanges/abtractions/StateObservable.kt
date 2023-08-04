@@ -1,7 +1,7 @@
 package com.makki.exchanges.abtractions
 
-import com.makki.exchanges.tools.StateObserver
+import com.makki.exchanges.tools.StateTree
 
 interface StateObservable {
-	fun state(): StateObserver
+	fun state(): StateTree
 }

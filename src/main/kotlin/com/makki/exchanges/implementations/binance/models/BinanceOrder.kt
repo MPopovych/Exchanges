@@ -7,6 +7,7 @@ import com.makki.exchanges.common.serializers.BigDecimalSerializer
 import com.makki.exchanges.models.OrderId
 import com.makki.exchanges.models.OrderSide
 import com.makki.exchanges.models.OrderState
+import com.makki.exchanges.models.OrderType
 import com.makki.exchanges.tools.eqIgC
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
@@ -57,6 +58,7 @@ class BinanceOrderFlattened(
 	val baseFillVolume: BigDecimal,
 	val quoteFillVolume: BigDecimal,
 	val state: OrderState,
+	val type: OrderType,
 	val side: OrderSide,
 ) {
 
@@ -77,6 +79,10 @@ class BinanceOrderFlattened(
 				"BUY" -> OrderSide.BUY_BASE
 				else -> OrderSide.UNKNOWN
 			}
+			val type = when(orderFull.type) {
+				"LIMIT" -> OrderType.LIMIT
+				else -> OrderType.UNKNOWN
+			}
 
 			return BinanceOrderFlattened(
 				orderId = orderId,
@@ -86,7 +92,8 @@ class BinanceOrderFlattened(
 				baseFillVolume = orderFull.executedQty,
 				quoteFillVolume = orderFull.cummulativeQuoteQty,
 				state = state,
-				side = side
+				side = side,
+				type = type
 			)
 		}
 	}

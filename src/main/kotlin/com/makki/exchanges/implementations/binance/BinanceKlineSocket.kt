@@ -10,7 +10,7 @@ import com.makki.exchanges.implementations.binance.models.BinanceSocketKlineMsg
 import com.makki.exchanges.logging.LogLevel
 import com.makki.exchanges.logging.loggerBuilder
 import com.makki.exchanges.tools.CachedStateSubject
-import com.makki.exchanges.tools.StateObserver
+import com.makki.exchanges.tools.StateTree
 import com.makki.exchanges.tools.ellipsis
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -56,7 +56,7 @@ class BinanceKlineSocket(socket: SelfManagingSocket? = null) : StateObservable {
 	fun stop() = socket.close()
 	fun lazyStop() = socket.stopOnNext()
 
-	override fun state() = StateObserver()
+	override fun state() = StateTree()
 		.track("active") { isActivated() }
 		.track("running") { isRunning() }
 		.track("market_count") { marketList.size }

@@ -15,7 +15,7 @@ import com.makki.exchanges.logging.defaultLogger
 import com.makki.exchanges.models.*
 import com.makki.exchanges.tools.CachedStateSubject
 import com.makki.exchanges.tools.RateLimiterWeighted
-import com.makki.exchanges.tools.StateObserver
+import com.makki.exchanges.tools.StateTree
 import com.makki.exchanges.tools.eqIgC
 import com.makki.exchanges.wrapper.*
 import kotlinx.coroutines.channels.BufferOverflow
@@ -35,9 +35,10 @@ import java.util.concurrent.TimeUnit
 open class BinanceWrap(
 	private val api: BinanceApi = BinanceApi(),
 	private val safeGuardConfig: SafeGuardConfig = SafeGuardConfig(),
-) :
-	ApiWrapper, WrapTraitApiBalance, WrapTraitApiLimitOrder, WrapTraitApiKline,
-	WrapTraitErrorStream, WrapTraitApiMarketInfo, WrapTraitSocketKline, StateObservable {
+) : ApiWrapper,
+	WrapTraitApiMarketInfo, WrapTraitApiBalance, WrapTraitApiLimitOrder, WrapTraitApiOrder,
+	WrapTraitErrorStream, WrapTraitApiKline, WrapTraitSocketKline,
+	StateObservable {
 
 	private val errorFlow = CachedStateSubject<SealedApiError>(BufferOverflow.DROP_OLDEST)
 	private val logger = defaultLogger()
@@ -98,7 +99,7 @@ open class BinanceWrap(
 
 		return@notify response
 			.mapOk { BinanceOrderFlattened.from(it) }
-			.mapOk { it.toGeneric(pair, spend, gain) }
+			.mapOk { it.toKnown(pair, spend, gain) }
 			.mapError { rcError -> rcError.toSealedError() }
 	}
 
@@ -110,7 +111,7 @@ open class BinanceWrap(
 
 		return@notify response
 			.mapOk { BinanceOrderFlattened.from(it) }
-			.mapOk { it.toGeneric(order.pair, order.spendCurrency, order.gainCurrency) }
+			.mapOk { it.toKnown(order.pair, order.spendCurrency, order.gainCurrency) }
 			.mapError { rcError -> rcError.toSealedError() }
 	}
 
@@ -122,7 +123,39 @@ open class BinanceWrap(
 
 		return@notify response
 			.mapOk { BinanceOrderFlattened.from(it) }
-			.mapOk { it.toGeneric(order.pair, order.spendCurrency, order.gainCurrency) }
+			.mapOk { it.toKnown(order.pair, order.spendCurrency, order.gainCurrency) }
+			.mapError { rcError -> rcError.toSealedError() }
+	}
+
+	override suspend fun allOpenOrders(): Result<List<UnknownOrder>, SealedApiError> = notify {
+		val response = limiter.tryRun(10f) {
+			api.getOpenOrders()
+		}.unwrapOk() ?: return@notify SealedApiError.RateLimited.wrapError()
+
+		return@notify response
+			.mapOk { list -> list.map { BinanceOrderFlattened.from(it).toUnknown() } }
+			.mapError { rcError -> rcError.toSealedError() }
+	}
+
+	override suspend fun queryOrder(id: OrderId, pair: MarketPair): Result<UnknownOrder, SealedApiError> = notify {
+		val response = limiter.tryRun(2f) {
+			val symbol = readApiName(pair)
+			api.getOrder(symbol, id.id)
+		}.unwrapOk() ?: return@notify SealedApiError.RateLimited.wrapError()
+
+		return@notify response
+			.mapOk { BinanceOrderFlattened.from(it).toUnknown() }
+			.mapError { rcError -> rcError.toSealedError() }
+	}
+
+	override suspend fun cancelOrder(id: OrderId, pair: MarketPair): Result<UnknownOrder, SealedApiError> = notify {
+		val response = limiter.tryRun(1f) {
+			val symbol = readApiName(pair)
+			api.cancelOrder(symbol, id.id)
+		}.unwrapOk() ?: return@notify SealedApiError.RateLimited.wrapError()
+
+		return@notify response
+			.mapOk { BinanceOrderFlattened.from(it).toUnknown() }
 			.mapError { rcError -> rcError.toSealedError() }
 	}
 
@@ -189,9 +222,9 @@ open class BinanceWrap(
 		return errorFlow.asSharedFlow()
 	}
 
-	override fun state(): StateObserver = StateObserver()
+	override fun state(): StateTree = StateTree()
 		.merge("kline_socket", klineSocket.state())
-		.track("error") { errorFlow.replayCache.firstOrNull() as Any }
+		.track("error") { errorFlow.replayCache.firstOrNull() }
 
 	override fun readApiName(marketPair: MarketPair): String {
 		return BinanceUtils.getApiMarketName(marketPair)
