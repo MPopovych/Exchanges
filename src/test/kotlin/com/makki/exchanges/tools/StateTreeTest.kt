@@ -21,4 +21,20 @@ class StateTreeTest {
 		println(externalTree)
 	}
 
+	@Test
+	fun testPoolingToJson() = asyncTest {
+		val deepTree = StateTree()
+			.track("time") { System.currentTimeMillis() }
+
+		val midTree = StateTree()
+			.merge("test", deepTree)
+			.track("name") { Thread.currentThread().name }
+			.track("state") { Thread.currentThread().state.name }
+
+		val externalTree = StateTree()
+			.merge("thread", midTree)
+
+		println(externalTree.toJson())
+	}
+
 }

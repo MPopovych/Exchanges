@@ -8,11 +8,13 @@ class BalanceBook(
 	entries: List<BalanceEntry>,
 ) {
 	private val map = entries.associateBy { it.baseName.lowercase() }
-	private val created = Instant.now()
+	val created = Instant.now()
 
 	operator fun get(name: String) = map[name.lowercase()]
+	operator fun get(currency: Currency) = map[currency.name.lowercase()]
 
 	fun iterator() = map.values.iterator()
+	fun size() = map.size
 
 	fun isFresh(allowed: TemporalAmount): Boolean {
 		return created.plus(allowed) >= Instant.now()

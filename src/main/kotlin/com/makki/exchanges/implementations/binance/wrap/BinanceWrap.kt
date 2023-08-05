@@ -49,7 +49,7 @@ open class BinanceWrap(
 	private val klineSocket = BinanceKlineSocket()
 
 	override suspend fun balance(): Result<BalanceBook, SealedApiError> = notify {
-		if (api.hasCredentials) return@notify SealedApiError.InvalidAuth.wrapError()
+		if (!api.hasCredentials) return@notify SealedApiError.InvalidAuth.wrapError()
 
 		val response = limiter.tryRun(10f) {
 			api.getUserData()
@@ -116,10 +116,10 @@ open class BinanceWrap(
 	}
 
 	override suspend fun cancelOrder(order: KnownOrder): Result<KnownOrder, SealedApiError> = notify {
-		val response = limiter.tryRun(1f) {
+		val response = limiter.forceRun(1f) {
 			val symbol = readApiName(order.pair)
 			api.cancelOrder(symbol, order.id.id)
-		}.unwrapOk() ?: return@notify SealedApiError.RateLimited.wrapError()
+		}
 
 		return@notify response
 			.mapOk { BinanceOrderFlattened.from(it) }
@@ -149,10 +149,10 @@ open class BinanceWrap(
 	}
 
 	override suspend fun cancelOrder(id: OrderId, pair: MarketPair): Result<UnknownOrder, SealedApiError> = notify {
-		val response = limiter.tryRun(1f) {
+		val response = limiter.forceRun(1f) {
 			val symbol = readApiName(pair)
 			api.cancelOrder(symbol, id.id)
-		}.unwrapOk() ?: return@notify SealedApiError.RateLimited.wrapError()
+		}
 
 		return@notify response
 			.mapOk { BinanceOrderFlattened.from(it).toUnknown() }
@@ -222,8 +222,8 @@ open class BinanceWrap(
 		return errorFlow.asSharedFlow()
 	}
 
-	override fun state(): StateTree = StateTree()
-		.merge("kline_socket", klineSocket.state())
+	override fun stateTree(): StateTree = StateTree()
+		.merge("kline_socket", klineSocket.stateTree())
 		.track("error") { errorFlow.replayCache.firstOrNull() }
 
 	override fun readApiName(marketPair: MarketPair): String {

@@ -106,13 +106,13 @@ internal fun BinanceApi.BinanceError.toSealedApiErrorExt(): SealedApiError {
 		-1021 -> SealedApiError.NonceRaceCondition
 
 		-1100, -1101, -1102, -1103, -1105, -1106, -1111,
-		-1114, -1115, -1116, -1117, -1120, -1121, -1131,
+		-1114, -1115, -1116, -1117, -1120, -1131,
 		-1151, -2016,
 		-> SealedApiError.BadRequestException
 
 		-1112 -> SealedApiError.Order.PriceFillMiss
 		-1109 -> SealedApiError.Banned
-		-1108, -1110, -4141, -3004 -> SealedApiError.MarketBlocked
+		-1108, -1121, -1110, -4141, -3004 -> SealedApiError.MarketBlocked
 		-2010 -> SealedApiError.Order.OrderReject
 		-2011 -> SealedApiError.Order.CancelReject
 		-2013 -> SealedApiError.Order.OrderNotFound // 2011 is for cancel, 2013 get order

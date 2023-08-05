@@ -56,7 +56,7 @@ class BinanceKlineSocket(socket: SelfManagingSocket? = null) : StateObservable {
 	fun stop() = socket.close()
 	fun lazyStop() = socket.stopOnNext()
 
-	override fun state() = StateTree()
+	override fun stateTree() = StateTree()
 		.track("active") { isActivated() }
 		.track("running") { isRunning() }
 		.track("market_count") { marketList.size }

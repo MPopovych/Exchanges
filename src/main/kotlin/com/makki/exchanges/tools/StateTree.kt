@@ -1,6 +1,7 @@
 package com.makki.exchanges.tools
 
 import com.makki.exchanges.abtractions.StateObservable
+import kotlinx.serialization.json.*
 
 class StateTree {
 	private val cache = LinkedHashMap<String, Node>()
@@ -16,7 +17,7 @@ class StateTree {
 	}
 
 	fun merge(key: String, other: StateObservable): StateTree {
-		merge(key, other.state())
+		merge(key, other.stateTree())
 		return this
 	}
 
@@ -34,6 +35,14 @@ class StateTree {
 		return buffer
 	}
 
+	fun toJson(): JsonElement {
+		return JsonObject(
+			this.cache.mapNotNull {
+				Pair(it.key, handleAny(it.value.toJson()))
+			}.toMap()
+		)
+	}
+
 	override fun toString(): String {
 		val sb = StringBuilder()
 		for (s in get()) {
@@ -46,17 +55,49 @@ class StateTree {
 	}
 
 	private sealed class Node {
-		class Generic(private val block: (() -> Any?)) : Node() {
+		class Generic(internal val block: (() -> Any?)) : Node() {
 			fun invoke(depth: Int, key: String): Entries = Entries.State(depth, key, block())
 		}
 
-		class Tree(private val tree: StateTree) : Node() {
+		class Tree(internal val tree: StateTree) : Node() {
 			fun invoke(depth: Int): List<Entries> = tree.get(depth)
+		}
+
+		fun toJson(): JsonElement {
+			return when (this) {
+				is Generic -> handleAny(this.block())
+				is Tree -> return this.tree.toJson()
+			}
 		}
 	}
 
 	sealed interface Entries {
 		class Header(val depth: Int, val key: String) : Entries
 		data class State(val depth: Int, val key: String, val value: Any?) : Entries
+	}
+
+	companion object {
+		private fun handleAny(v: Any?): JsonElement {
+			return when (v) {
+				is StateTree -> v.toJson()
+				null -> JsonNull
+				is JsonElement -> v
+				is String -> JsonPrimitive(v)
+				is Number -> JsonPrimitive(v)
+				is Boolean -> JsonPrimitive(v)
+				is Array<*> -> JsonArray(v.map { handleAny(it) })
+				is Collection<*> -> JsonArray(v.map { handleAny(it) })
+				is Map<*, *> -> {
+					v.mapNotNull {
+						Pair(
+							it.key?.toString() ?: return@mapNotNull null,
+							handleAny(it.value)
+						)
+					}.toMap().let { JsonObject(it) }
+				}
+
+				else -> JsonPrimitive(v.toString())
+			}
+		}
 	}
 }
