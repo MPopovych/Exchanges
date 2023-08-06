@@ -6,6 +6,7 @@ import com.makki.exchanges.implementations.binance.models.BinanceKlineInterval
 import com.makki.exchanges.implementations.binance.wrap.BinanceWrap
 import com.makki.exchanges.tools.eqIgC
 import com.makki.exchanges.wrapper.ApiWrapper
+import com.makki.exchanges.wrapper.SafeGuardConfig
 
 /**
  * Utility interface for defining
@@ -32,13 +33,13 @@ sealed interface SupportedExchanges : ExchangeDefinition {
 		override val intervals: List<KlineInterval> = BinanceKlineInterval.values().toList()
 	}
 
-	class BinanceTestNet(apiKey: String, secret: String) : SupportedExchanges {
+	class BinanceTestNet(apiKey: String, secret: String, safeGuardConfig: SafeGuardConfig = SafeGuardConfig()) : SupportedExchanges {
 		val api = BinanceApi(
 			pubKey = apiKey,
 			secretKey = secret,
 			baseUrl = BinanceApi.TEST_SPOT_API_URL
 		)
-		override val wrap: BinanceWrap = BinanceWrap(api)
+		override val wrap: BinanceWrap = BinanceWrap(api, safeGuardConfig)
 		override val exchangeName: String = "binance"
 		override val intervals: List<KlineInterval> = BinanceKlineInterval.values().toList()
 	}

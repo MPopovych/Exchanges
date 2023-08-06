@@ -40,7 +40,7 @@ open class BinanceWrap(
 	WrapTraitErrorStream, WrapTraitApiKline, WrapTraitSocketKline,
 	StateObservable {
 
-	private val errorFlow = CachedStateSubject<SealedApiError>(BufferOverflow.DROP_OLDEST)
+	private val errorFlow = CachedStateSubject<ErrorNotification<SealedApiError>>(BufferOverflow.DROP_OLDEST)
 	private val logger = defaultLogger()
 	private val limiter = RateLimiterWeighted(
 		intervalMs = safeGuardConfig.intervalMs ?: TimeUnit.SECONDS.toMillis(1),
@@ -59,7 +59,7 @@ open class BinanceWrap(
 			.mapOk { marketInfo ->
 				marketInfo.balances.map {
 					BalanceEntry(
-						baseName = it.asset,
+						name = it.asset,
 						available = it.free,
 						frozen = it.locked
 					)
@@ -214,11 +214,11 @@ open class BinanceWrap(
 			.map { f -> f.mapAsset { k -> k as Kline } }
 	}
 
-	override suspend fun notifyError(result: SealedApiError) {
+	override suspend fun notifyError(result: ErrorNotification<SealedApiError>) {
 		errorFlow.tryEmit(result)
 	}
 
-	override suspend fun trackErrors(): Flow<SealedApiError> {
+	override suspend fun trackErrors(): Flow<ErrorNotification<SealedApiError>> {
 		return errorFlow.asSharedFlow()
 	}
 

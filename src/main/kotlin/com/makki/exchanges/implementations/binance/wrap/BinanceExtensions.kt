@@ -108,7 +108,7 @@ internal fun BinanceApi.BinanceError.toSealedApiErrorExt(): SealedApiError {
 		-1100, -1101, -1102, -1103, -1105, -1106, -1111,
 		-1114, -1115, -1116, -1117, -1120, -1131,
 		-1151, -2016,
-		-> SealedApiError.BadRequestException
+		-> SealedApiError.BadRequestException(this.msg)
 
 		-1112 -> SealedApiError.Order.PriceFillMiss
 		-1109 -> SealedApiError.Banned
@@ -138,7 +138,7 @@ internal fun BinanceApi.BinanceError.toSealedApiErrorExt(): SealedApiError {
 
 internal fun RemoteCallError.HttpError<*>.httpToSealedErrorExt(): SealedApiError {
 	return when (this.code) {
-		400 -> SealedApiError.BadRequestException
+		400 -> SealedApiError.BadRequestException(this.msg)
 		401 -> SealedApiError.InvalidAuth
 		// 418 is a binance iAmATeapot reserved for a temporary ban for days
 		418, 403 -> SealedApiError.Banned

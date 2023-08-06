@@ -7,12 +7,16 @@ package com.makki.exchanges.wrapper
  */
 sealed interface SealedApiError {
 
+	interface Descriptive {
+		val msg: String
+	}
+
 	/**
 	 * This should be returned when an unrecognized error is received or in a method not expecting that case
 	 * Recommended way to handle - log + recovery + crash if involves trading
 	 */
-	data class Unexpected(val description: String) : SealedApiError, ErrorTags.ShouldNotify
-	data class ConnectionError(val description: String) : SealedApiError
+	data class Unexpected(override val msg: String) : SealedApiError, ErrorTags.ShouldNotify, Descriptive
+	data class ConnectionError(override val msg: String) : SealedApiError, Descriptive
 
 	object SafeguardBlock : SealedApiError
 	object InvalidAuth : SealedApiError, ErrorTags.Persisting, ErrorTags.ShouldNotify
@@ -28,11 +32,12 @@ sealed interface SealedApiError {
 	object MarketBlocked : SealedApiError, ErrorTags.Temporary
 
 	object PersistingHttpException : SealedApiError, ErrorTags.Persisting
-	object BadRequestException : SealedApiError, ErrorTags.Persisting, ErrorTags.ShouldNotify
+	data class BadRequestException(override val msg: String) : SealedApiError, ErrorTags.Persisting,
+		ErrorTags.ShouldNotify, Descriptive
 
 	sealed interface Order : SealedApiError {
-		object OrderReject: Order, ErrorTags.ShouldNotify
-		object CancelReject: Order, ErrorTags.ShouldNotify
+		object OrderReject : Order, ErrorTags.ShouldNotify
+		object CancelReject : Order, ErrorTags.ShouldNotify
 		object OrderNotFound : Order
 		object AlreadyCancelled : Order
 		object InsufficientBalance : Order

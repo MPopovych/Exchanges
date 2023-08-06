@@ -48,7 +48,8 @@ data class KnownOrder(
 	val spendFilledVolume: BigDecimal,
 	val gainFilledVolume: BigDecimal,
 ) : Order {
-	fun isFilled() = spendFilledVolume == BigDecimal.ZERO || gainFilledVolume == BigDecimal.ZERO
+	fun isFilled() = spendFilledVolume != BigDecimal.ZERO || gainFilledVolume != BigDecimal.ZERO
+	fun fillRate() = spendFilledVolume / spendOrigVolume
 	fun shortFormat() = "${pair.prettyName()}:${id.id}"
 }
 

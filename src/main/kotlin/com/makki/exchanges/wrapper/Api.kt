@@ -28,24 +28,39 @@ interface WSWrapper {
 	fun readWSName(marketPair: MarketPair): String
 }
 
+class ErrorNotification<T>(
+	val method: String,
+	val error: T,
+)
+
 /**
  * Wrap a method and intercepts the error, pushes it to the implemented method
  */
 interface WrapTraitErrorStream {
-	suspend fun trackErrors(): Flow<SealedApiError>
-	suspend fun notifyError(result: SealedApiError)
+	suspend fun trackErrors(): Flow<ErrorNotification<SealedApiError>>
+	suspend fun notifyError(result: ErrorNotification<SealedApiError>)
 
-	suspend fun <T> WSWrapper.notify(block: suspend () -> Result<T, SealedApiError>): Result<T, SealedApiError> {
+	private fun getCallerName(block: suspend () -> Any): String {
+		val obj = block::class.java.enclosingClass.simpleName
+		val method = block::class.java.enclosingMethod.name.replace("\$suspendImpl", "")
+		return "${obj}_$method"
+	}
+
+	suspend fun <T> WrapTraitErrorStream.notify(block: suspend () -> Result<T, SealedApiError>): Result<T, SealedApiError> {
 		return try {
 			block().onError { e ->
-				notifyError(e)
+				notifyError(ErrorNotification(getCallerName(block), e))
 			}
 		} catch (e: Exception) {
 			e.printStackTrace()
-			return SealedApiError.Unexpected(e.message ?: e.localizedMessage).wrapError()
+			val error: SealedApiError = SealedApiError.Unexpected(e.message ?: e.localizedMessage)
+			notifyError(ErrorNotification(getCallerName(block), error))
+			return error.wrapError()
 		}
 	}
+
 }
+
 
 interface WrapTraitApiKline : ApiWrapper {
 	suspend fun klineData(
