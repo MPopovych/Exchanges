@@ -17,7 +17,7 @@ interface MarketPair {
 	fun prettyName() = "$base$quote".uppercase() // do not use for exchange
 
 	fun hasCurrency(currency: String) = currency.eqIgC(base) || currency.eqIgC(quote)
-	fun hasCurrency(currency: Currency) = currency.name.eqIgC(base) || currency.name.eqIgC(quote)
+	fun hasCurrency(currency: Currency) = currency.eq(base) || currency.eq(quote)
 
 	fun getOpposite(currency: String): String? {
 		if (currency.eqIgC(base)) return quote
@@ -26,8 +26,8 @@ interface MarketPair {
 	}
 
 	fun getOpposite(currency: Currency): Currency? {
-		if (currency.name.eqIgC(base)) return quoteCurrency()
-		if (currency.name.eqIgC(quote)) return baseCurrency()
+		if (currency.eq(base)) return quoteCurrency()
+		if (currency.eq(quote)) return baseCurrency()
 		return null
 	}
 
@@ -51,6 +51,7 @@ interface MarketPairPreciseTrait : MarketPair {
 
 interface MarketPairMinimumTrait : MarketPairPreciseTrait {
 	val minBaseVolume: Double
+	val minQuoteVolume: Double
 	val minBasePrice: Double
 }
 
@@ -73,6 +74,7 @@ data class DetailedMarketPair(
 	override val basePrecision: Int,
 	override val quotePrecision: Int,
 	override val minBaseVolume: Double,
+	override val minQuoteVolume: Double,
 	override val minBasePrice: Double,
 	override val makerRatio: Double,
 	override val takeRatio: Double,

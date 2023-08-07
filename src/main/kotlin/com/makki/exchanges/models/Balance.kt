@@ -2,8 +2,11 @@
 
 package com.makki.exchanges.models
 
+import com.makki.exchanges.abtractions.StateObservable
 import com.makki.exchanges.common.serializers.BigDecimalSerializer
 import com.makki.exchanges.common.serializers.InstantSerializer
+import com.makki.exchanges.tools.StateTree
+import com.makki.exchanges.tools.trimStr
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import java.math.BigDecimal
@@ -17,7 +20,7 @@ class BalanceBook(
 	val created = Instant.now()
 
 	operator fun get(name: String) = map[name.lowercase()]
-	operator fun get(currency: Currency) = map[currency.name.lowercase()]
+	operator fun get(currency: Currency) = map[currency.lowName()]
 
 	fun iterator() = map.values.iterator()
 	fun size() = map.size
@@ -53,4 +56,12 @@ data class SerializableBalanceEntry(
 	val available: BigDecimal,
 	val frozen: BigDecimal,
 	val total: BigDecimal,
-)
+) : StateObservable {
+
+	override fun stateTree(): StateTree = StateTree()
+		.track("name") { name }
+		.track("available") { available.trimStr() }
+		.track("frozen") { frozen.trimStr() }
+		.track("total") { total.trimStr() }
+
+}

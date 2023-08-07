@@ -1,5 +1,7 @@
 package com.makki.exchanges.tools
 
+import com.makki.exchanges.abtractions.StateFormat
+import com.makki.exchanges.abtractions.StateJson
 import com.makki.exchanges.abtractions.StateObservable
 import kotlinx.serialization.json.*
 
@@ -48,7 +50,13 @@ class StateTree {
 		for (s in get()) {
 			when (s) {
 				is Entries.Header -> sb.appendLine("${"\t".repeat(s.depth)}${s.key}:")
-				is Entries.State -> sb.appendLine("${"\t".repeat(s.depth)}${s.key}:'${s.value}'")
+				is Entries.State -> {
+					if (s.value is StateFormat) {
+						sb.appendLine("${"\t".repeat(s.depth)}${s.key}:'${s.value.format()}'")
+					} else {
+						sb.appendLine("${"\t".repeat(s.depth)}${s.key}:'${s.value}'")
+					}
+				}
 			}
 		}
 		return sb.toString()
@@ -79,6 +87,8 @@ class StateTree {
 	companion object {
 		private fun handleAny(v: Any?): JsonElement {
 			return when (v) {
+				is StateObservable -> v.stateTree().toJson()
+				is StateJson -> v.toJson()
 				is StateTree -> v.toJson()
 				null -> JsonNull
 				is JsonElement -> v

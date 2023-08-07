@@ -1,7 +1,9 @@
 package com.makki.exchanges.models
 
+import com.makki.exchanges.tools.trimStr
 import kotlinx.serialization.Serializable
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 @Serializable
 @JvmInline
@@ -48,9 +50,16 @@ data class KnownOrder(
 	val spendFilledVolume: BigDecimal,
 	val gainFilledVolume: BigDecimal,
 ) : Order {
-	fun isFilled() = spendFilledVolume != BigDecimal.ZERO || gainFilledVolume != BigDecimal.ZERO
-	fun fillRate() = spendFilledVolume / spendOrigVolume
-	fun shortFormat() = "${pair.prettyName()}:${id.id}"
+	val created = System.currentTimeMillis()
+
+	fun isFilled() = spendFilledVolume.signum() > 0 || gainFilledVolume.signum() > 0
+	fun fillRatio() = spendFilledVolume / spendOrigVolume
+	fun fillRatioString() = (fillRatio() * BigDecimal.valueOf(100))
+		.setScale(2, RoundingMode.HALF_EVEN)
+		.trimStr()
+
+	fun shortFormat() = "${pair.prettyName()}.${id.id}"
+	fun longFormat() = "${pair.prettyName()}.${id.id}.price(${price.trimStr()})"
 }
 
 data class UnknownOrder(

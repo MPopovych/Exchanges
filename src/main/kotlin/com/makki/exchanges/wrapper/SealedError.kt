@@ -41,7 +41,7 @@ sealed interface SealedApiError {
 		object OrderNotFound : Order
 		object AlreadyCancelled : Order
 		object InsufficientBalance : Order
-		object FilterFailure : Order, ErrorTags.ShouldNotify
+		data class FilterFailure(override val msg: String) : Order, ErrorTags.ShouldNotify, Descriptive
 		object PriceFillMiss : Order
 	}
 }

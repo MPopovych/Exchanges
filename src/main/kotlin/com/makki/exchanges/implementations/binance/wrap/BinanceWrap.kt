@@ -13,10 +13,7 @@ import com.makki.exchanges.implementations.binance.BinanceUtils
 import com.makki.exchanges.implementations.binance.models.BinanceOrderFlattened
 import com.makki.exchanges.logging.defaultLogger
 import com.makki.exchanges.models.*
-import com.makki.exchanges.tools.CachedStateSubject
-import com.makki.exchanges.tools.RateLimiterWeighted
-import com.makki.exchanges.tools.StateTree
-import com.makki.exchanges.tools.eqIgC
+import com.makki.exchanges.tools.*
 import com.makki.exchanges.wrapper.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
@@ -87,13 +84,22 @@ open class BinanceWrap(
 			val symbol = readApiName(pair)
 
 			if (spend == pair.baseCurrency()) {
-				val priceStr = price.setScale(knownRounding.quotePrecision, RoundingMode.CEILING).toPlainString()
-				val baseV = spendVolume.setScale(knownRounding.basePrecision, RoundingMode.FLOOR).toPlainString()
-				api.createLimitOrderInBase(symbol, side = "SELL", price = priceStr, quantity = baseV)
+				val priceStr = price.setScale(knownRounding.quotePrecision, RoundingMode.CEILING)
+					.trimStr()
+				val baseV = spendVolume.setScale(knownRounding.basePrecision, RoundingMode.FLOOR)
+					.trimStr()
+
+				api.createLimitOrderInBase(symbol, side = "SELL", price = priceStr, quantityBase = baseV)
 			} else {
-				val priceStr = price.setScale(knownRounding.quotePrecision, RoundingMode.FLOOR).toPlainString()
-				val quoteV = spendVolume.setScale(knownRounding.quotePrecision, RoundingMode.FLOOR).toPlainString()
-				api.createLimitOrderInQuote(symbol, side = "BUY", price = priceStr, quoteOrderQty = quoteV)
+				val priceRounded = price.setScale(knownRounding.quotePrecision, RoundingMode.FLOOR).stripTrailingZeros()
+
+				val priceStr = priceRounded.trimStr()
+
+				val newGainVolume = spendVolume / priceRounded
+				val baseV = newGainVolume.setScale(knownRounding.basePrecision, RoundingMode.FLOOR)
+					.trimStr()
+
+				api.createLimitOrderInQuote(symbol, side = "BUY", price = priceStr, quantityBase = baseV)
 			}
 		}.unwrapOk() ?: return@notify SealedApiError.RateLimited.wrapError()
 

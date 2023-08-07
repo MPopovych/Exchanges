@@ -109,7 +109,7 @@ open class BinanceApi(
 	suspend fun createLimitOrderInBase(
 		symbol: String,
 		side: String,
-		quantity: String,
+		quantityBase: String,
 		price: String,
 		timeInForce: String = "GTC",
 	): Result<BinanceOrder_RESULT, RemoteCallError<BinanceError>> {
@@ -117,7 +117,7 @@ open class BinanceApi(
 			"symbol" to symbol,
 			"side" to side,
 			"price" to price,
-			"quantity" to quantity,
+			"quantity" to quantityBase,
 			"type" to "LIMIT",
 			"newOrderRespType" to "FULL",
 			"timeInForce" to timeInForce
@@ -128,7 +128,7 @@ open class BinanceApi(
 	suspend fun createLimitOrderInQuote(
 		symbol: String,
 		side: String,
-		quoteOrderQty: String,
+		quantityBase: String,
 		price: String,
 		timeInForce: String = "GTC",
 	): Result<BinanceOrder_RESULT, RemoteCallError<BinanceError>> {
@@ -136,7 +136,7 @@ open class BinanceApi(
 			"symbol" to symbol,
 			"side" to side,
 			"price" to price,
-			"quoteOrderQty" to quoteOrderQty,
+			"quantity" to quantityBase,
 			"type" to "LIMIT",
 			"newOrderRespType" to "FULL",
 			"timeInForce" to timeInForce

@@ -71,6 +71,7 @@ internal fun BinanceOrderFlattened.toUnknown(): UnknownOrder {
 internal fun binancePairToGeneric(p: BinanceMarketPair): MarketPair {
 	val lotSizeFilter = p.filters.firstNotNullOfOrNull { it as? BinanceMarketPairFilter.LotSizeFilter }
 	val priceFilter = p.filters.firstNotNullOfOrNull { it as? BinanceMarketPairFilter.PriceFilter }
+	val notionFilter = p.filters.firstNotNullOfOrNull { it as? BinanceMarketPairFilter.NotionalFilter }
 
 	// find '1' in 10.000 or 0.0001
 	val filterBasePrecision = lotSizeFilter?.stepSize?.findPrecision()
@@ -82,6 +83,7 @@ internal fun binancePairToGeneric(p: BinanceMarketPair): MarketPair {
 		basePrecision = filterBasePrecision ?: p.basePrecision,
 		quotePrecision = filterQuotePrecision ?: p.quotePrecision,
 		minBaseVolume = lotSizeFilter?.minQty ?: 0.0,
+		minQuoteVolume = notionFilter?.minNotional ?: 0.0,
 		minBasePrice = priceFilter?.minPrice ?: 0.0,
 		takeRatio = 0.9985, // hardcoded
 		makerRatio = 0.9985 // hardcoded
@@ -125,7 +127,7 @@ internal fun BinanceApi.BinanceError.toSealedApiErrorExt(): SealedApiError {
 	val byMsg = when {
 		msg.inIgC("Invalid API-key, IP, or permissions for action") -> SealedApiError.InvalidAuth
 		msg.inIgC("Filter failure") || msg.inIgC("LOT_SIZE") || msg.inIgC("MIN_NOTIONAL") || msg.inIgC("Invalid quantity") -> {
-			SealedApiError.Order.FilterFailure
+			SealedApiError.Order.FilterFailure(msg)
 		}
 
 		else -> null
