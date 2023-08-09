@@ -11,6 +11,13 @@ Written in pure Kotlin, built on gradle 8.1.1
 | Binance  |      +      |     -     |   +   |   -    |
 |    -     |      -      |     -     |   -   |   -    |
 
+## Private api support
+
+| Exchange | Order (limit) | Order info | Order cancel | All open orders |
+|:--------:|:-------------:|:----------:|:------------:|:---------------:|
+| Binance  |       +       |     +      |      +       |        +        |
+|    -     |       -       |     -      |      -       |        -        |
+
 ## WebSocket support
 
 | Exchange | KLine | OrderBook | Public Trades | Private Trades |
@@ -20,6 +27,5 @@ Written in pure Kotlin, built on gradle 8.1.1
 
 ### Plans
 
-- Authorised methods
 - OB sockets
 - Migrate exchanges from old library (private) onto this one
