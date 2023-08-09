@@ -8,19 +8,21 @@ import com.makki.exchanges.common.Result
  * Which should not be a heavy load compared to weight of http requests and risks of ddos
  */
 class RateLimiterWeighted(
-	private val intervalMs: Long,
-	private val weightLimit: Float,
+	val intervalMs: Long,
+	val weightLimit: Float,
 ) {
 
 	private val active = weightLimit > 0
 	private val accounting = ArrayList<Pair<Long, Float>>()
 
+	fun isActive() = active
+
 	/**
 	 * Used for requests eligible for rate-limiting
 	 * Ex.: a balance refresh or checking the state of an order
 	 */
-	suspend fun <T> tryRun(weight: Float, block: suspend () -> T): Result<T, Rejection> {
-		if (!active) return Result.Ok(block())
+	inline fun <T> tryRun(weight: Float, block: () -> T): Result<T, Rejection> {
+		if (!isActive()) return Result.Ok(block())
 
 		return if (countAndClearAccount() >= weightLimit) {
 			Result.Error(Rejection)
@@ -34,21 +36,21 @@ class RateLimiterWeighted(
 	 * Used for requests that NEED to be executed, although they are accounted
 	 * Ex.: an urgent cancel order
 	 */
-	suspend fun <T> forceRun(weight: Float, block: suspend () -> T): T {
+	inline fun <T> forceRun(weight: Float, block: () -> T): T {
 		// add weight to current window
-		if (active) {
+		if (isActive()) {
 			accountFor(weight)
 		}
 		return block()
 	}
 
 	@Synchronized
-	private fun accountFor(weight: Float) {
+	fun accountFor(weight: Float) {
 		accounting.add(Pair(System.currentTimeMillis(), weight))
 	}
 
 	@Synchronized
-	private fun countAndClearAccount(): Float {
+	fun countAndClearAccount(): Float {
 		var sum = 0f
 		val now = System.currentTimeMillis()
 		val iterator = accounting.iterator()
@@ -64,5 +66,5 @@ class RateLimiterWeighted(
 	}
 
 
-	data object Rejection
+	object Rejection
 }

@@ -1,11 +1,15 @@
 package com.makki.exchanges.tools
 
-import java.math.BigDecimal
-import java.math.RoundingMode
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 fun String.inIgC(value: String) = this.contains(value, true)
 
 fun String.eqIgC(value: String) = this.equals(value, true)
+
+fun String.urlEncodeUTF8(): String {
+	return URLEncoder.encode(this, StandardCharsets.UTF_8)
+}
 
 fun produceError(): Nothing = throw IllegalStateException("Logic failure")
 
@@ -32,16 +36,6 @@ fun String.ellipsis(size: Int): String {
 
 fun String.ellipsisSingleLine(size: Int): String {
 	return this.replace("\n", " ").ellipsis(size)
-}
-
-fun Number.roundToDec(precision: Int, rounding: RoundingMode = RoundingMode.HALF_EVEN): BigDecimal {
-	return this.toDouble().toBigDecimal().setScale(precision, rounding)
-}
-
-fun Number.roundToDecString(decimals: Int, rounding: RoundingMode = RoundingMode.HALF_EVEN): String {
-	return roundToDec(decimals, rounding)
-		.toPlainString()
-		.removeTrailingZeroes()
 }
 
 fun String.removeTrailingZeroes(): String {

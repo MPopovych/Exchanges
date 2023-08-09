@@ -1,6 +1,8 @@
 package com.makki.exchanges.models
 
 import com.makki.exchanges.tools.eqIgC
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Market pairs are constructed as traits together as some exchanges do not provide all data
@@ -9,22 +11,47 @@ interface MarketPair {
 	val base: String
 	val quote: String
 
-	fun pairName() = "$base$quote".uppercase()
+	fun baseCurrency() = Currency(base)
+	fun quoteCurrency() = Currency(quote)
+
+	fun prettyName() = "$base$quote".uppercase() // do not use for exchange
+
 	fun hasCurrency(currency: String) = currency.eqIgC(base) || currency.eqIgC(quote)
+	fun hasCurrency(currency: Currency) = currency.eq(base) || currency.eq(quote)
+
 	fun getOpposite(currency: String): String? {
 		if (currency.eqIgC(base)) return quote
 		if (currency.eqIgC(quote)) return base
 		return null
+	}
+
+	fun getOpposite(currency: Currency): Currency? {
+		if (currency.eq(base)) return quoteCurrency()
+		if (currency.eq(quote)) return baseCurrency()
+		return null
+	}
+
+	fun eq(other: MarketPair): Boolean {
+		return base.eqIgC(other.base) && quote.eqIgC(other.quote)
 	}
 }
 
 interface MarketPairPreciseTrait : MarketPair {
 	val basePrecision: Int
 	val quotePrecision: Int
+
+	fun roundOfBase(value: BigDecimal, mode: RoundingMode): BigDecimal {
+		return value.setScale(basePrecision, mode).stripTrailingZeros()
+	}
+
+	fun roundOfQuote(value: BigDecimal, mode: RoundingMode): BigDecimal {
+		return value.setScale(quotePrecision, mode).stripTrailingZeros()
+	}
 }
 
 interface MarketPairMinimumTrait : MarketPairPreciseTrait {
 	val minBaseVolume: Double
+	val minQuoteVolume: Double
 	val minBasePrice: Double
 }
 
@@ -33,10 +60,12 @@ interface MarketRatioTrait : MarketPair {
 	val takeRatio: Double
 }
 
+interface MarketPairFull : MarketPair, MarketRatioTrait, MarketPairMinimumTrait, MarketPairPreciseTrait
+
 data class SimpleMarketPair(
 	override val base: String,
 	override val quote: String,
-): MarketPair
+) : MarketPair
 
 
 data class DetailedMarketPair(
@@ -45,7 +74,8 @@ data class DetailedMarketPair(
 	override val basePrecision: Int,
 	override val quotePrecision: Int,
 	override val minBaseVolume: Double,
+	override val minQuoteVolume: Double,
 	override val minBasePrice: Double,
 	override val makerRatio: Double,
 	override val takeRatio: Double,
-) : MarketPairMinimumTrait, MarketRatioTrait
+) : MarketPairFull

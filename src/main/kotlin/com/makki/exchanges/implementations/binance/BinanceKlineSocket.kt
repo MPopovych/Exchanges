@@ -10,13 +10,13 @@ import com.makki.exchanges.implementations.binance.models.BinanceSocketKlineMsg
 import com.makki.exchanges.logging.LogLevel
 import com.makki.exchanges.logging.loggerBuilder
 import com.makki.exchanges.tools.CachedStateSubject
-import com.makki.exchanges.tools.StateObserver
+import com.makki.exchanges.tools.StateTree
 import com.makki.exchanges.tools.ellipsis
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.util.concurrent.CopyOnWriteArraySet
 
-class BinanceKlineSocket(socket: SelfManagingSocket? = null): StateObservable {
+class BinanceKlineSocket(socket: SelfManagingSocket? = null) : StateObservable {
 
 	private val logger = loggerBuilder().level(LogLevel.Info).build()
 	private val marketList = CopyOnWriteArraySet<Subscription>()
@@ -56,7 +56,7 @@ class BinanceKlineSocket(socket: SelfManagingSocket? = null): StateObservable {
 	fun stop() = socket.close()
 	fun lazyStop() = socket.stopOnNext()
 
-	override fun state() = StateObserver()
+	override fun stateTree() = StateTree()
 		.track("active") { isActivated() }
 		.track("running") { isRunning() }
 		.track("market_count") { marketList.size }

@@ -25,7 +25,6 @@ class SelfManagingSocket(
 	private val activated = AtomicBoolean(false)
 	private val retryTimer = RetryTimer(delayMs = TimeUnit.SECONDS.toMillis(2))
 
-	// drop the oldest entry in cache
 	private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
 	private var connectionJob: Job? = null

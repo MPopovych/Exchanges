@@ -8,22 +8,22 @@ sealed interface HttpErrorGroups {
 }
 
 sealed class HttpCodeDescription(val codeRange: IntRange) {
-	data object Ok : HttpCodeDescription(200..299), HttpErrorGroups.Ambiguous
+	object Ok : HttpCodeDescription(200..299), HttpErrorGroups.Ambiguous
 
-	data object BadRequest : HttpCodeDescription(400), HttpErrorGroups.Persisting
-	data object Unauthorized : HttpCodeDescription(401), HttpErrorGroups.Persisting
-	data object Forbidden : HttpCodeDescription(403), HttpErrorGroups.Persisting
-	data object NotFound : HttpCodeDescription(404), HttpErrorGroups.Persisting
-	data object MethodNotAllowed : HttpCodeDescription(405), HttpErrorGroups.Persisting
-	data object NotAcceptable : HttpCodeDescription(406), HttpErrorGroups.Persisting
+	object BadRequest : HttpCodeDescription(400), HttpErrorGroups.Persisting
+	object Unauthorized : HttpCodeDescription(401), HttpErrorGroups.Persisting
+	object Forbidden : HttpCodeDescription(403), HttpErrorGroups.Persisting
+	object NotFound : HttpCodeDescription(404), HttpErrorGroups.Persisting
+	object MethodNotAllowed : HttpCodeDescription(405), HttpErrorGroups.Persisting
+	object NotAcceptable : HttpCodeDescription(406), HttpErrorGroups.Persisting
 
-	data object RequestTimeout : HttpCodeDescription(408), HttpErrorGroups.Temporary
-	data object Other400 : HttpCodeDescription(409..428), HttpErrorGroups.Temporary
-	data object TooManyRequests : HttpCodeDescription(429), HttpErrorGroups.Temporary
+	object RequestTimeout : HttpCodeDescription(408), HttpErrorGroups.Temporary
+	object Other400 : HttpCodeDescription(409..428), HttpErrorGroups.Temporary
+	object TooManyRequests : HttpCodeDescription(429), HttpErrorGroups.Temporary
 
-	data object InternalServerError : HttpCodeDescription(500), HttpErrorGroups.Ambiguous
-	data object NotImplemented : HttpCodeDescription(501), HttpErrorGroups.Persisting
-	data object Temporary500Error : HttpCodeDescription(502..504), HttpErrorGroups.Temporary
+	object InternalServerError : HttpCodeDescription(500), HttpErrorGroups.Ambiguous
+	object NotImplemented : HttpCodeDescription(501), HttpErrorGroups.Persisting
+	object Temporary500Error : HttpCodeDescription(502..504), HttpErrorGroups.Temporary
 
 	data class Undefined(val code: Int) : HttpCodeDescription(1000..1000), HttpErrorGroups.Ambiguous
 

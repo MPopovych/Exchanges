@@ -2,6 +2,8 @@ package com.makki.exchanges.logging
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTimedValue
 
 enum class LogLevel(val priority: Int) {
 	Error(0),
@@ -12,11 +14,15 @@ enum class LogLevel(val priority: Int) {
 	Debug(3),
 }
 
-class LoggerBuilder internal constructor(private val callerName: String) {
+class LoggerBuilder internal constructor(private var callerName: String) {
 
 	private var time: Boolean = true
 	private var timePattern: String = "HH:mm:ss.SSS"
 	private var logLevel: LogLevel = LogLevel.Info
+
+	fun callerName(name: String) = this.also {
+		this.callerName = name
+	}
 
 	fun time(enabled: Boolean): LoggerBuilder = this.also { time = enabled }
 
@@ -33,13 +39,22 @@ class LoggerBuilder internal constructor(private val callerName: String) {
 }
 
 class Logger internal constructor(
-	private val callerName: String,
+	val callerName: String,
 	private val logLevel: LogLevel,
 	private val time: Boolean,
 	timePattern: String,
 ) {
 
 	private val formatter = DateTimeFormatter.ofPattern(timePattern)
+
+	@OptIn(ExperimentalTime::class)
+	inline fun <T> benchmark(name: String, block: () -> T): T {
+		val timedValue = measureTimedValue {
+			block()
+		}
+		printInfo("[$name] took ${timedValue.duration}")
+		return timedValue.value
+	}
 
 	fun printDebug(caller: String? = null, msg: () -> Any) {
 		if (LogLevel.Debug.priority > logLevel.priority) return

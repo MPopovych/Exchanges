@@ -4,9 +4,9 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.min
 
 class RetryTimer(
-    private val delayMs: Long,
-    private val maxMultiplier: Int = 5,
-    private val failInterval: Long = delayMs * 5,
+	private val delayMs: Long,
+	private val maxMultiplier: Int = 5,
+	private val failInterval: Long = delayMs * 5,
 ) {
 
 	private var lastRetry = 0L

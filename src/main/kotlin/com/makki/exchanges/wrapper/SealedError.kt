@@ -7,35 +7,41 @@ package com.makki.exchanges.wrapper
  */
 sealed interface SealedApiError {
 
+	interface Descriptive {
+		val msg: String
+	}
+
 	/**
 	 * This should be returned when an unrecognized error is received or in a method not expecting that case
 	 * Recommended way to handle - log + recovery + crash if involves trading
 	 */
-	data class Unexpected(val description: String) : SealedApiError, ErrorTags.ShouldNotify
-	data class ConnectionError(val description: String) : SealedApiError
+	data class Unexpected(override val msg: String) : SealedApiError, ErrorTags.ShouldNotify, Descriptive
+	data class ConnectionError(override val msg: String) : SealedApiError, Descriptive
 
-	data object SafeguardBlock : SealedApiError
-
-	data object InvalidAuth : SealedApiError, ErrorTags.Persisting, ErrorTags.ShouldNotify
-	data object Banned : SealedApiError, ErrorTags.Persisting, ErrorTags.ShouldNotify
+	object SafeguardBlock : SealedApiError
+	object InvalidAuth : SealedApiError, ErrorTags.Persisting, ErrorTags.ShouldNotify
+	object Banned : SealedApiError, ErrorTags.Persisting, ErrorTags.ShouldNotify
 
 	/**
 	 * Can be retried right away or handled
 	 */
-	data object NonceRaceCondition : SealedApiError, ErrorTags.Temporary
-	data object InternalExchangeError : SealedApiError, ErrorTags.Temporary
-	data object RateLimited : SealedApiError, ErrorTags.Temporary, ErrorTags.ShouldNotify
-	data object ExchangeIsOutOfService : SealedApiError, ErrorTags.Temporary
-	data object MarketBlocked : SealedApiError, ErrorTags.Temporary
+	object NonceRaceCondition : SealedApiError, ErrorTags.Temporary
+	object InternalExchangeError : SealedApiError, ErrorTags.Temporary
+	object RateLimited : SealedApiError, ErrorTags.Temporary, ErrorTags.ShouldNotify
+	object ExchangeIsOutOfService : SealedApiError, ErrorTags.Temporary
+	object MarketBlocked : SealedApiError, ErrorTags.Temporary
 
-	data object PersistingHttpException : SealedApiError, ErrorTags.Persisting
+	object PersistingHttpException : SealedApiError, ErrorTags.Persisting
+	data class BadRequestException(override val msg: String) : SealedApiError, ErrorTags.Persisting,
+		ErrorTags.ShouldNotify, Descriptive
 
 	sealed interface Order : SealedApiError {
-		data object ArgumentFail : Order, ErrorTags.ShouldNotify
-		data object OrderNotFound : Order
-		data object AlreadyCancelled : Order
-		data object InsufficientBalance : Order
-		data object VolumeLessThanMinimum : Order, ErrorTags.ShouldNotify
-		data object PriceFillMiss : Order
+		object OrderReject : Order, ErrorTags.ShouldNotify
+		object CancelReject : Order, ErrorTags.ShouldNotify
+		object OrderNotFound : Order
+		object AlreadyCancelled : Order
+		object InsufficientBalance : Order
+		data class FilterFailure(override val msg: String) : Order, ErrorTags.ShouldNotify, Descriptive
+		object PriceFillMiss : Order
 	}
 }

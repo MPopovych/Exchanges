@@ -39,7 +39,14 @@ sealed class BinanceMarketPairFilter {
 	) : BinanceMarketPairFilter()
 
 	@Serializable
-	data object Unknown : BinanceMarketPairFilter()
+	data class NotionalFilter(
+		val minNotional: Double,
+		val maxNotional: Double,
+		val avgPriceMins: Int,
+	) : BinanceMarketPairFilter()
+
+	@Serializable
+	object Unknown : BinanceMarketPairFilter()
 }
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -53,6 +60,7 @@ object BinanceFilterSerializer :
 		return when (element.jsonObject["filterType"]?.jsonPrimitive?.contentOrNull) {
 			"PRICE_FILTER" -> BinanceMarketPairFilter.PriceFilter.serializer()
 			"LOT_SIZE" -> BinanceMarketPairFilter.LotSizeFilter.serializer()
+			"NOTIONAL" -> BinanceMarketPairFilter.NotionalFilter.serializer()
 			else -> BinanceMarketPairFilter.Unknown.serializer()
 		}
 	}

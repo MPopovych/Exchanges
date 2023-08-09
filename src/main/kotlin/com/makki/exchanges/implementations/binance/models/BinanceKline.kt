@@ -1,20 +1,21 @@
 package com.makki.exchanges.implementations.binance.models
 
+import com.makki.exchanges.models.Kline
 import kotlinx.serialization.*
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.json.*
 
 @Serializable(with = BinanceKlineSerializer::class)
 data class BinanceKline(
-	val start: Long,
-	val end: Long,
-	val open: Double,
-	val high: Double,
-	val low: Double,
-	val close: Double,
-	val volume: Double,
-	val trades: Int,
-)
+	override val start: Long,
+	override val end: Long,
+	override val open: Double,
+	override val high: Double,
+	override val low: Double,
+	override val close: Double,
+	override val volume: Double,
+	override val trades: Int,
+) : Kline
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializer(forClass = BinanceKline::class)
@@ -48,19 +49,19 @@ data class BinanceSocketKlineAsset(
 	@SerialName("s")
 	val market: String,
 	@SerialName("t")
-	val start: Long,
+	override val start: Long,
 	@SerialName("T")
-	val end: Long,
+	override val end: Long,
 	@SerialName("o")
-	val open: Double,
+	override val open: Double,
 	@SerialName("c")
-	val close: Double,
+	override val close: Double,
 	@SerialName("h")
-	val high: Double,
+	override val high: Double,
 	@SerialName("l")
-	val low: Double,
+	override val low: Double,
 	@SerialName("v")
-	val volume: Double,
+	override val volume: Double,
 	@SerialName("n")
-	val trades: Int,
-)
+	override val trades: Int,
+) : Kline

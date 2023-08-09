@@ -1,18 +1,17 @@
 package com.makki.exchanges.implementations.binance
 
-import com.makki.exchanges.nontesting.TestResourceLoader
 import com.makki.exchanges.abtractions.ClientResponse
 import com.makki.exchanges.abtractions.JsonParser
 import com.makki.exchanges.abtractions.RemoteCallError
+import com.makki.exchanges.nontesting.MockClient
+import com.makki.exchanges.nontesting.TestResourceLoader
 import com.makki.exchanges.nontesting.asyncTest
 import com.makki.exchanges.nontesting.asyncTestSecure
-import com.makki.exchanges.nontesting.MockClient
 import io.ktor.util.network.*
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 
 class BinanceApiTest {
-
 	@Test
 	fun testBinanceMarketInfoRequest() = asyncTestSecure("HEAVY") {
 		val response = BinanceApi().marketInfo()
@@ -36,7 +35,7 @@ class BinanceApiTest {
 	fun testBinanceRestErrorLayer() = asyncTest {
 		val error = BinanceApi.BinanceError(14, "Test error")
 		val errorJson = JsonParser.default.encodeToString(error)
-		val mock = MockClient { _ -> ClientResponse.Ok(200, errorJson, 0) }
+		val mock = MockClient { _, _ -> ClientResponse.Ok(200, errorJson, 0) }
 		val response = BinanceApi(mock).klineData("BTCUSDT", "15m")
 
 		assert(response.isError() && response.unwrapError() != null)
@@ -45,7 +44,7 @@ class BinanceApiTest {
 
 	@Test
 	fun testBinanceConnectionErrorLayer() = asyncTest {
-		val mock = MockClient { _ -> ClientResponse.ConnectionError(UnresolvedAddressException()) }
+		val mock = MockClient { _, _ -> ClientResponse.ConnectionError(UnresolvedAddressException()) }
 		val response = BinanceApi(mock).klineData("BTCUSDT", "15m")
 
 		assert(response.isError() && response.unwrapError() != null)
@@ -54,7 +53,7 @@ class BinanceApiTest {
 
 	@Test
 	fun testBinanceParseErrorLayer() = asyncTest {
-		val mock = MockClient { _ -> ClientResponse.Ok(200, "{}", 0) }
+		val mock = MockClient { _, _ -> ClientResponse.Ok(200, "{}", 0) }
 		val response = BinanceApi(mock).klineData("BTCUSDT", "15m")
 
 		assert(response.isError() && response.unwrapError() != null)
@@ -63,7 +62,7 @@ class BinanceApiTest {
 
 	@Test
 	fun testBinanceHttpErrorLayer() = asyncTest {
-		val mock = MockClient { _ -> ClientResponse.Ok(404, "", 0) }
+		val mock = MockClient { _, _ -> ClientResponse.Ok(404, "", 0) }
 		val response = BinanceApi(mock).klineData("BTCUSDT", "15m")
 
 		assert(response.isError() && response.unwrapError() != null)
@@ -73,7 +72,7 @@ class BinanceApiTest {
 	@Test
 	fun testBinanceOkLayer() = asyncTest {
 		val resp = TestResourceLoader.loadText("/binance/kline_rest_response.json")
-		val mock = MockClient { _ -> ClientResponse.Ok(200, resp, 0) }
+		val mock = MockClient { _, _ -> ClientResponse.Ok(200, resp, 0) }
 		val response = BinanceApi(mock).klineData("BTCUSDT", "15m")
 
 		assert(response.isOk())

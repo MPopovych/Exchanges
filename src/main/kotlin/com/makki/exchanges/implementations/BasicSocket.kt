@@ -60,7 +60,7 @@ sealed interface SocketFrame {
 	class Text(val data: String) : SocketFrame
 	class Binary(val data: ByteArray) : SocketFrame
 	class Close(val reason: String) : SocketFrame
-	data object PingPong : SocketFrame
+	object PingPong : SocketFrame
 }
 
 class BasicSocketSession(private val ktorSession: DefaultClientWebSocketSession) : SocketSession {

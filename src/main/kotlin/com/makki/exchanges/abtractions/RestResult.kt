@@ -6,7 +6,7 @@ package com.makki.exchanges.abtractions
  */
 sealed interface RemoteCallError<E> {
 	data class ApiError<E>(val error: E) : RemoteCallError<E>
-	data class HttpError<E>(val code: Int) : RemoteCallError<E>
+	data class HttpError<E>(val code: Int, val msg: String) : RemoteCallError<E>
 	data class ParseError<E>(val exception: Exception, val response: String) : RemoteCallError<E>
 	data class ConnectionError<E>(val exception: Exception) : RemoteCallError<E>
 }

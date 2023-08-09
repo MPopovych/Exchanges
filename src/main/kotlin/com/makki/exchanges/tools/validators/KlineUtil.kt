@@ -1,7 +1,8 @@
 package com.makki.exchanges.tools.validators
 
 import com.makki.exchanges.logging.defaultLogger
-import com.makki.exchanges.models.KlineEntry
+import com.makki.exchanges.models.Kline
+import com.makki.exchanges.models.KlineAsset
 
 object KlineUtil {
 
@@ -10,7 +11,7 @@ object KlineUtil {
 	/**
 	 * Input data needs to be pre sorted
 	 */
-	fun testIntegrity(kline: List<KlineEntry>, print: Boolean = false): Boolean {
+	fun testIntegrity(kline: List<Kline>, print: Boolean = false): Boolean {
 		if (kline.isEmpty()) return false
 
 		var end = kline.first().end
@@ -29,11 +30,11 @@ object KlineUtil {
 	/**
 	 * Sorts, checks for gaps or empty
 	 */
-	fun processAndClean(kline: List<KlineEntry>): KlineProcessResult {
+	fun processAndClean(kline: List<KlineAsset>): KlineProcessResult {
 		if (kline.isEmpty()) return KlineProcessResult.Empty
 
 		val sorted = kline.sortedBy { it.start }
-		var known: KlineEntry? = null
+		var known: KlineAsset? = null
 
 		val gaps = ArrayList<Pair<Long, Long>>()
 
@@ -62,9 +63,9 @@ object KlineUtil {
 	}
 
 	sealed interface KlineProcessResult {
-		class Ok(val data: List<KlineEntry>) : KlineProcessResult
+		class Ok(val data: List<KlineAsset>) : KlineProcessResult
 		class Gap(val list: List<Pair<Long, Long>>) : KlineProcessResult
-		data object Empty : KlineProcessResult
+		object Empty : KlineProcessResult
 	}
 
 }
