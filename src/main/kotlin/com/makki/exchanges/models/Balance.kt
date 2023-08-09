@@ -23,7 +23,9 @@ class BalanceBook(
 	operator fun get(currency: Currency) = map[currency.lowName()]
 
 	fun iterator() = map.values.iterator()
+	fun list() = map.values.toList()
 	fun size() = map.size
+	fun nonZero() = BalanceBook(list().filter { entry -> entry.total.signum() != 0 || entry.frozen.signum() != 0 })
 	fun toSerializableMap() = map.mapValues { it.value.toSerializable() }
 
 	fun isFresh(allowed: TemporalAmount): Boolean {
