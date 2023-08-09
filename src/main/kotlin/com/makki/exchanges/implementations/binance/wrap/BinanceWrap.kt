@@ -105,7 +105,7 @@ open class BinanceWrap(
 
 		return@notify response
 			.mapOk { BinanceOrderFlattened.from(it) }
-			.mapOk { it.toKnown(pair, spend, gain) }
+			.mapOk { it.toKnown(pair, spend, gain, System.currentTimeMillis()) }
 			.mapError { rcError -> rcError.toSealedError() }
 	}
 
@@ -117,7 +117,7 @@ open class BinanceWrap(
 
 		return@notify response
 			.mapOk { BinanceOrderFlattened.from(it) }
-			.mapOk { it.toKnown(order.pair, order.spendCurrency, order.gainCurrency) }
+			.mapOk { it.toKnown(order.pair, order.spendCurrency, order.gainCurrency, order.created) }
 			.mapError { rcError -> rcError.toSealedError() }
 	}
 
@@ -129,7 +129,7 @@ open class BinanceWrap(
 
 		return@notify response
 			.mapOk { BinanceOrderFlattened.from(it) }
-			.mapOk { it.toKnown(order.pair, order.spendCurrency, order.gainCurrency) }
+			.mapOk { it.toKnown(order.pair, order.spendCurrency, order.gainCurrency, order.created) }
 			.mapError { rcError -> rcError.toSealedError() }
 	}
 

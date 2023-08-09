@@ -1,5 +1,6 @@
 package com.makki.exchanges.common.serializers
 
+import com.makki.exchanges.tools.trimStr
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -14,7 +15,7 @@ object BigDecimalSerializer : KSerializer<BigDecimal> {
 	}
 
 	override fun serialize(encoder: Encoder, value: BigDecimal) {
-		encoder.encodeString(value.toPlainString())
+		encoder.encodeString(value.trimStr())
 	}
 
 	override val descriptor: SerialDescriptor

@@ -16,6 +16,7 @@ internal fun BinanceOrderFlattened.toKnown(
 	pair: MarketPair,
 	spend: Currency,
 	gain: Currency,
+	created: Long,
 ): KnownOrder {
 	val spendOrigVolume: BigDecimal
 	val spendFillVolume: BigDecimal
@@ -50,6 +51,8 @@ internal fun BinanceOrderFlattened.toKnown(
 		spendFilledVolume = spendFillVolume,
 		gainFilledVolume = gainFillVolume,
 		price = this.price,
+		created = created,
+		updated = System.currentTimeMillis()
 	)
 }
 

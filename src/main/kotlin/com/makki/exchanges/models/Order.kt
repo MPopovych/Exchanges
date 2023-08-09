@@ -49,8 +49,10 @@ data class KnownOrder(
 	val price: BigDecimal,
 	val spendFilledVolume: BigDecimal,
 	val gainFilledVolume: BigDecimal,
+	val created: Long,
+	val updated: Long,
 ) : Order {
-	val created = System.currentTimeMillis()
+
 
 	fun isFilled() = spendFilledVolume.signum() > 0 || gainFilledVolume.signum() > 0
 	fun fillRatio() = spendFilledVolume / spendOrigVolume
@@ -58,8 +60,9 @@ data class KnownOrder(
 		.setScale(2, RoundingMode.HALF_EVEN)
 		.trimStr()
 
-	fun shortFormat() = "${pair.prettyName()}.${id.id}"
-	fun longFormat() = "${pair.prettyName()}.${id.id}.price(${price.trimStr()})"
+	fun shortFormat() = "${pair.prettyName()}.id(${id.id})"
+	fun longFormat() =
+		"${pair.prettyName()}.id(${id.id}).price(${price.trimStr()}).spend(${spendCurrency.upName()}).spendVolume(${spendOrigVolume.trimStr()}).gain(${gainCurrency.upName()}).gainVolume(${gainOrigVolume.trimStr()}).fill(${fillRatioString()}%)"
 }
 
 data class UnknownOrder(
