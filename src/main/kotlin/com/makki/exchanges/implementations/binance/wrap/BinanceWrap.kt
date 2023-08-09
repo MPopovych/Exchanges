@@ -84,19 +84,27 @@ open class BinanceWrap(
 			val symbol = readApiName(pair)
 
 			if (spend == pair.baseCurrency()) {
-				val priceStr = price.setScale(knownRounding.quotePrecision, RoundingMode.CEILING)
-					.trimStr()
-				val baseV = spendVolume.setScale(knownRounding.basePrecision, RoundingMode.FLOOR)
-					.trimStr()
+				val priceStr = price.setScale(knownRounding.quotePrecision, RoundingMode.CEILING).also {
+					if (it.isZero()) return@notify SealedApiError.Order.FilterFailure.DIV_BY_ZERO.wrapError()
+				}.trimStr()
+				val baseV = spendVolume.setScale(knownRounding.basePrecision, RoundingMode.FLOOR).also {
+					if (it.isZero()) return@notify SealedApiError.Order.FilterFailure.DIV_BY_ZERO.wrapError()
+				}.trimStr()
 
 				api.createLimitOrderInBase(symbol, side = "SELL", price = priceStr, quantityBase = baseV)
 			} else {
-				val priceRounded = price.setScale(knownRounding.quotePrecision, RoundingMode.FLOOR).stripTrailingZeros()
-
+				val priceRounded = price.setScale(knownRounding.quotePrecision, RoundingMode.FLOOR)
+					.stripTrailingZeros()
+					.also {
+						if (it.isZero()) return@notify SealedApiError.Order.FilterFailure.DIV_BY_ZERO.wrapError()
+					}
 				val priceStr = priceRounded.trimStr()
 
 				val newGainVolume = spendVolume / priceRounded
 				val baseV = newGainVolume.setScale(knownRounding.basePrecision, RoundingMode.FLOOR)
+					.also {
+						if (it.isZero()) return@notify SealedApiError.Order.FilterFailure.DIV_BY_ZERO.wrapError()
+					}
 					.trimStr()
 
 				api.createLimitOrderInQuote(symbol, side = "BUY", price = priceStr, quantityBase = baseV)
