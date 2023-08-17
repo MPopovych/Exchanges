@@ -13,3 +13,5 @@ fun Number.roundToDecString(decimals: Int, rounding: RoundingMode = RoundingMode
 }
 
 fun BigDecimal.trimStr(): String = this.stripTrailingZeros().toPlainString()
+
+fun BigDecimal.isZero(): Boolean = this.signum() == 0
