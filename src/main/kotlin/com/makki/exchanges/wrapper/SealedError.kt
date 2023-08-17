@@ -41,11 +41,13 @@ sealed interface SealedApiError {
 		object OrderNotFound : Order
 		object AlreadyCancelled : Order
 		object InsufficientBalance : Order
+    
 		data class FilterFailure(override val msg: String) : Order, ErrorTags.ShouldNotify, Descriptive {
 			companion object {
 				val DIV_BY_ZERO = FilterFailure("internal.div by zero")
 			}
 		}
+
 		object PriceFillMiss : Order
 	}
 }
