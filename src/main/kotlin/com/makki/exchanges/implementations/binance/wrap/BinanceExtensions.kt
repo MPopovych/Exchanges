@@ -8,7 +8,7 @@ import com.makki.exchanges.implementations.binance.models.BinanceOrderFlattened
 import com.makki.exchanges.logging.GlobalLogger
 import com.makki.exchanges.models.*
 import com.makki.exchanges.tools.findPrecision
-import com.makki.exchanges.tools.inIgC
+import com.makki.exchanges.tools.containsIgC
 import com.makki.exchanges.wrapper.SealedApiError
 import java.math.BigDecimal
 
@@ -128,8 +128,8 @@ internal fun BinanceApi.BinanceError.toSealedApiErrorExt(): SealedApiError {
 	if (byCode != null) return byCode
 
 	val byMsg = when {
-		msg.inIgC("Invalid API-key, IP, or permissions for action") -> SealedApiError.InvalidAuth
-		msg.inIgC("Filter failure") || msg.inIgC("LOT_SIZE") || msg.inIgC("MIN_NOTIONAL") || msg.inIgC("Invalid quantity") -> {
+		msg.containsIgC("Invalid API-key, IP, or permissions for action") -> SealedApiError.InvalidAuth
+		msg.containsIgC("Filter failure") || msg.containsIgC("LOT_SIZE") || msg.containsIgC("MIN_NOTIONAL") || msg.containsIgC("Invalid quantity") -> {
 			SealedApiError.Order.FilterFailure(msg)
 		}
 

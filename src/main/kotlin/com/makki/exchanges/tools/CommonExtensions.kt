@@ -3,7 +3,9 @@ package com.makki.exchanges.tools
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-fun String.inIgC(value: String) = this.contains(value, true)
+fun String.containsIgC(value: String) = this.contains(value, true)
+
+fun String.inIgC(value: String) = value.contains(this, true)
 
 fun String.eqIgC(value: String) = this.equals(value, true)
 
