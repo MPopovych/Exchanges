@@ -13,8 +13,7 @@ enum class BinanceKlineInterval(
 	Minutes5("5m", TimeUnit.MINUTES.toMillis(5)),
 	Minutes15("15m", TimeUnit.MINUTES.toMillis(15)),
 	Minutes30("30m", TimeUnit.MINUTES.toMillis(30)),
-	Hour1("1h", TimeUnit.HOURS.toMillis(1)),
-	;
+	Hour1("1h", TimeUnit.HOURS.toMillis(1));
 
 	override val apiCode: String
 		get() = code
