@@ -8,6 +8,7 @@ enum class BinanceKlineInterval(
 	private val time: Long,
 ) : KlineInterval {
 
+	Minutes1("1m", TimeUnit.MINUTES.toMillis(1)),
 	Minutes3("3m", TimeUnit.MINUTES.toMillis(3)),
 	Minutes5("5m", TimeUnit.MINUTES.toMillis(5)),
 	Minutes15("15m", TimeUnit.MINUTES.toMillis(15)),
